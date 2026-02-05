@@ -1,0 +1,97 @@
+/* Admin CSS */
+.shipkia-track-btn {
+    background: #007cba;
+    color: #fff;
+    text-decoration: none;
+    line-height: normal;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.shipkia-track-btn:hover {
+    background: #006ba1;
+    color: #fff;
+}
+
+/* Tracking Info Grid */
+.shipkia-admin-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.shipkia-admin-row .shipkia-col {
+    width: 31% !important; /* 3-column layout with gap */
+    float: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex;
+    flex-direction: column;
+}
+
+/* AWB Field with Copy Button */
+.shipkia-awb-field .shipkia-input-wrapper {
+    display: flex !important;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+}
+
+.shipkia-awb-field input[type="text"] {
+    flex: 1 !important;
+    user-select: text !important;
+    cursor: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    max-width: calc(100% - 50px) !important;
+}
+
+.shipkia-copy-btn {
+    flex-shrink: 0 !important;
+    padding: 6px 10px !important;
+    height: 32px !important;
+    line-height: 1.2 !important;
+    min-height: 32px !important;
+    cursor: pointer !important;
+    background: #2271b1 !important;
+    border-color: #2271b1 !important;
+    color: #fff !important;
+    font-size: 16px !important;
+    margin: 0 !important;
+}
+
+.shipkia-copy-btn:hover {
+    background: #135e96 !important;
+    border-color: #135e96 !important;
+}
+
+.shipkia-copy-btn:active {
+    background: #0a4b78 !important;
+}
+
+/* Ensure inputs take full width of their column and look read-only */
+.shipkia-admin-row input[type="text"] {
+    width: 100% !important;
+    background-color: #f0f0f1;
+    cursor: not-allowed;
+    color: #555;
+    border-color: #ddd;
+}
+
+/* Labels should be above input in this context (WC defaults vary) */
+.shipkia-admin-row label {
+    display: block !important;
+    float: none !important;
+    margin: 0 0 5px 0 !important;
+    width: auto !important;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 782px) {
+    .shipkia-admin-row .shipkia-col {
+        width: 100% !important;
+        margin-bottom: 10px !important;
+    }
+}
