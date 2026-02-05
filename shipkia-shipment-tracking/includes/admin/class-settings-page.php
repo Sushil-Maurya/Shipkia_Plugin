@@ -45,6 +45,7 @@ class Shipkia_Settings_Page
         register_setting('shipkia_settings_group', 'shipkia_tracking_button_text');
         register_setting('shipkia_settings_group', 'shipkia_tracking_new_tab');
         register_setting('shipkia_settings_group', 'shipkia_app_url');
+        register_setting('shipkia_settings_group', 'shipkia_multisite_sites');
 
         // Shipkia Platform Connection Section
         add_settings_section(
@@ -69,6 +70,16 @@ class Shipkia_Settings_Page
             'shipkia-shipment-tracking',
             'shipkia_connection_section'
         );
+
+        if (is_multisite()) {
+            add_settings_field(
+                'shipkia_multisite_sites',
+                __('Select Sites to Connect', 'shipkia-shipment-tracking'),
+                array('Shipkia_Settings_Page', 'render_multisite_field'),
+                'shipkia-shipment-tracking',
+                'shipkia_connection_section'
+            );
+        }
 
         // General Settings Section
         add_settings_section(
@@ -138,6 +149,30 @@ class Shipkia_Settings_Page
         <label><input type="checkbox" name="shipkia_tracking_new_tab" value="yes" <?php checked($val, 'yes'); ?> />
             <?php _e('Open tracking link in a new tab', 'shipkia-shipment-tracking'); ?>
         </label>
+        <?php
+    }
+
+    public static function render_multisite_field()
+    {
+        if (!is_multisite()) return;
+        
+        $sites = get_sites();
+        $selected_sites = get_option('shipkia_multisite_sites', array());
+        if (!is_array($selected_sites)) $selected_sites = array();
+        
+        ?>
+        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; background: #fff;">
+            <?php foreach ($sites as $site): 
+                $site_details = get_blog_details($site->blog_id);
+                $checked = in_array($site->blog_id, $selected_sites) ? 'checked' : '';
+            ?>
+            <label style="display: block; margin-bottom: 5px;">
+                <input type="checkbox" name="shipkia_multisite_sites[]" value="<?php echo esc_attr($site->blog_id); ?>" <?php echo $checked; ?> /> 
+                <?php echo esc_html($site_details->blogname) . ' (' . esc_html($site_details->domain . $site_details->path) . ')'; ?>
+            </label>
+            <?php endforeach; ?>
+        </div>
+        <p class="description"><?php _e('Select the sites you want to connect to Shipkia.', 'shipkia-shipment-tracking'); ?></p>
         <?php
     }
 
@@ -309,7 +344,8 @@ function shipkia_handle_sync_ajax()
         wp_send_json_error(array('message' => __('Unauthorized', 'shipkia-shipment-tracking')));
     }
 
-    $result = Shipkia_Auth::manual_sync();
+    $create_new = isset($_POST['create_new']) ? filter_var($_POST['create_new'], FILTER_VALIDATE_BOOLEAN) : false;
+    $result = Shipkia_Auth::manual_sync($create_new);
 
     if ($result['success']) {
         wp_send_json_success($result);

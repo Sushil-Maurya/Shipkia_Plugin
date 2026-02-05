@@ -103,7 +103,7 @@ class Shipkia_Shipment_Tracking
      */
     public function add_plugin_settings_link($links)
     {
-        $settings_link = '<a href="admin.php?page=shipkia-settings">' . __('Settings', 'shipkia-shipment-tracking') . '</a>';
+        $settings_link = '<a href="admin.php?page=shipkia-shipment-tracking">' . __('Settings', 'shipkia-shipment-tracking') . '</a>';
         array_unshift($links, $settings_link);
         return $links;
     }
@@ -141,9 +141,10 @@ register_activation_hook(__FILE__, 'shipkia_plugin_activated');
 function shipkia_plugin_activated()
 {
     // Attempt auto-sync on activation
-    $synced = Shipkia_Auth::auto_sync_on_activate();
+    $result = Shipkia_Auth::auto_sync_on_activate();
+    $success = is_array($result) ? $result['success'] : $result;
     
-    if (!$synced) {
+    if (!$success) {
         // If auto-sync fails, fall back to auto-connect check
         delete_transient('shipkia_auto_connect_checked');
         set_transient('shipkia_trigger_auto_connect', true, 60);

@@ -119,38 +119,102 @@ jQuery(document).ready(function($) {
         e.preventDefault();
         
         var $btn = $(this);
-        var $message = $('#shipkia-connection-message');
         var originalHtml = $btn.html();
         
-        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update shipkia-spin" style="font-size: 16px; vertical-align: middle; line-height: 28px;"></span> Syncing...');
-        
-        // Add CSS for rotation if not already present
-        if (!$('#shipkia-spin-css').length) {
-            $('head').append('<style id="shipkia-spin-css">.shipkia-spin { animation: shipkia-rotation 2s infinite linear; } @keyframes shipkia-rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }</style>');
+        function performSync(createNew) {
+            $btn.prop('disabled', true).html('<span class="dashicons dashicons-update shipkia-spin" style="font-size: 16px; vertical-align: middle; line-height: 28px;"></span> Syncing...');
+            
+            // Add CSS for rotation if not already present
+            if (!$('#shipkia-spin-css').length) {
+                $('head').append('<style id="shipkia-spin-css">.shipkia-spin { animation: shipkia-rotation 2s infinite linear; } @keyframes shipkia-rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }</style>');
+            }
+            
+            $.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'shipkia_sync_platform',
+                    nonce: getConnectionNonce(),
+                    create_new: createNew
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showConnectionMessage(response.data.message || 'Sync successful', 'success');
+                        $btn.html('<span class="dashicons dashicons-yes" style="font-size: 16px; vertical-align: middle; line-height: 28px;"></span> Synced');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        // Check for store not found special case
+                        if (response.data.store_not_found) {
+                            if (confirm('No existing Shipkia store found for this URL. Do you want to create a new store?')) {
+                                performSync(true); // Retry with creation enabled
+                            } else {
+                                // User denied creation of missing store, so disconnect locally to match backend state
+                                showConnectionMessage('Sync cancelled. Disconnecting...', 'info');
+                                $.ajax({
+                                    url: ajaxurl,
+                                    type: 'POST',
+                                    data: {
+                                        action: 'shipkia_disconnect_platform',
+                                        nonce: getConnectionNonce()
+                                    },
+                                    success: function() {
+                                        location.reload();
+                                    }
+                                });
+                            }
+                        } else {
+                            showConnectionMessage(response.data.message || 'Sync failed', 'error');
+                            $btn.prop('disabled', false).html(originalHtml);
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showConnectionMessage('Sync failed: ' + error, 'error');
+                    $btn.prop('disabled', false).html(originalHtml);
+                }
+            });
         }
+        
+        // Start sync with create_new = false (check existence first)
+        performSync(false);
+    });
+
+    // Disconnect from Shipkia
+    $(document).on('click', '#shipkia-disconnect-btn', function(e) {
+        e.preventDefault();
+        
+        var $btn = $(this);
+        var $message = $('#shipkia-connection-message');
+        
+        if (!confirm('Are you sure you want to disconnect from Shipkia? This will clear all connection settings.')) {
+            return;
+        }
+        
+        $btn.prop('disabled', true).text('Disconnecting...');
         
         $.ajax({
             url: ajaxurl,
             type: 'POST',
             data: {
-                action: 'shipkia_sync_platform',
+                action: 'shipkia_disconnect_platform',
                 nonce: getConnectionNonce()
             },
             success: function(response) {
                 if (response.success) {
-                    showConnectionMessage(response.data.message || 'Sync successful', 'success');
-                    $btn.html('<span class="dashicons dashicons-yes" style="font-size: 16px; vertical-align: middle; line-height: 28px;"></span> Synced');
+                    showConnectionMessage(response.data.message || 'Disconnected successfully', 'success');
                     setTimeout(function() {
                         location.reload();
                     }, 1500);
                 } else {
-                    showConnectionMessage(response.data.message || 'Sync failed', 'error');
-                    $btn.prop('disabled', false).html(originalHtml);
+                    showConnectionMessage(response.data.message || 'Disconnect failed', 'error');
+                    $btn.prop('disabled', false).text('Disconnect');
                 }
             },
             error: function(xhr, status, error) {
-                showConnectionMessage('Sync failed: ' + error, 'error');
-                $btn.prop('disabled', false).html(originalHtml);
+                showConnectionMessage('Disconnect failed: ' + error, 'error');
+                $btn.prop('disabled', false).text('Disconnect');
             }
         });
     });

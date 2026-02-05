@@ -66,8 +66,8 @@ class Shipkia_Auth
         
         // If connected, we periodically verify the connection status
         if (self::is_connected()) {
-            // Verify every 12 hours, or every 1 hour if on settings page
-            $verify_interval = $is_settings_page ? HOUR_IN_SECONDS : (12 * HOUR_IN_SECONDS);
+            // Verify every 12 hours, or every 1 minute if on settings page
+            $verify_interval = $is_settings_page ? 60 : (12 * HOUR_IN_SECONDS);
             
             if (!get_transient('shipkia_connection_verified')) {
                 self::attempt_auto_connect();
@@ -112,7 +112,7 @@ class Shipkia_Auth
      * Auto-sync on plugin activation
      * Called once when plugin is activated
      */
-    public static function auto_sync_on_activate()
+    public static function auto_sync_on_activate($create_new = true)
     {
         try {
             $domain = self::get_store_domain();
@@ -129,19 +129,20 @@ class Shipkia_Auth
                     'platform' => 'woocommerce',
                     'plugin' => 'shipkia-shipment-tracking',
                     'plugin_version' => $plugin_version,
-                    'secret' => self::get_plugin_secret()
+                    'secret' => self::get_plugin_secret(),
+                    'create_new' => $create_new ? 'true' : 'false'
                 )
             ));
 
             if (is_wp_error($response)) {
                 self::log('Shipkia auto-sync failed: ' . $response->get_error_message(), 'error');
-                return false;
+                return array('success' => false, 'message' => $response->get_error_message());
             }
 
             $body = json_decode(wp_remote_retrieve_body($response), true);
 
             if (!$body || !isset($body['message'])) {
-                return false;
+                return array('success' => false, 'message' => 'Invalid response body');
             }
 
             $data = $body['message'];
@@ -159,13 +160,22 @@ class Shipkia_Auth
                 );
 
                 self::log('Shipkia: Auto-sync successful - store connected');
-                return true;
+                return array('success' => true, 'message' => $data['message']);
             }
 
-            return false;
+            // Check for store not found (confirmation needed)
+            if (isset($data['store_not_found']) && $data['store_not_found'] === true) {
+                return array(
+                    'success' => false,
+                    'store_not_found' => true,
+                    'message' => $data['message']
+                );
+            }
+
+            return array('success' => false, 'message' => isset($data['message']) ? $data['message'] : 'Unknown error');
         } catch (Exception $e) {
             self::log('Shipkia auto-sync exception: ' . $e->getMessage(), 'error');
-            return false;
+            return array('success' => false, 'message' => $e->getMessage());
         }
     }
 
@@ -203,10 +213,15 @@ class Shipkia_Auth
 
             $body = json_decode(wp_remote_retrieve_body($response), true);
 
-            if (!$body || !isset($body['message'])) {
-                return;
+            // Handle non-JSON or error responses from backend
+            $status_code = wp_remote_retrieve_response_code($response);
+            if ($status_code >= 400 || !$body || !isset($body['message'])) {
+                 self::log('Shipkia auto-connect: Received error status ' . $status_code . ' or invalid body', 'debug');
+                 // If we get an error but we are already connected, we stay connected for now
+                 // UNLESS it's a 404 which specifically means whitelisted method missing (rare)
+                 return;
             }
-
+            
             $data = $body['message'];
 
             // Check if store is connected
@@ -232,12 +247,13 @@ class Shipkia_Auth
     /**
      * Manual Sync - re-triggers auto-sync flow from UI
      */
-    public static function manual_sync()
+    public static function manual_sync($create_new = false)
     {
-        self::log('Shipkia: Manual sync triggered from UI');
+        self::log('Shipkia: Manual sync triggered from UI (Create new: ' . ($create_new ? 'Yes' : 'No') . ')');
         
         // Attempt auto-sync (this will register or update store and get new tokens)
-        $success = self::auto_sync_on_activate();
+        $result = self::auto_sync_on_activate($create_new);
+        $success = is_array($result) ? $result['success'] : $result;
         
         if ($success) {
             set_transient('shipkia_connection_verified', true, HOUR_IN_SECONDS);
@@ -246,10 +262,16 @@ class Shipkia_Auth
                 'message' => __('Sync successful! Connection and data updated.', 'shipkia-shipment-tracking')
             );
         } else {
-            return array(
+            $response = array(
                 'success' => false,
-                'message' => __('Sync failed. Please check your connection to Shipkia.', 'shipkia-shipment-tracking')
+                'message' => isset($result['message']) ? $result['message'] : __('Sync failed.', 'shipkia-shipment-tracking')
             );
+            
+            if (isset($result['store_not_found'])) {
+                $response['store_not_found'] = true;
+            }
+            
+            return $response;
         }
     }
 
@@ -417,20 +439,25 @@ class Shipkia_Auth
 
             if ($access_token && $api_url) {
                 // Notify backend (fire and forget)
-                wp_remote_post($api_url . '/api/method/bu_ecommerce_integrations.api.woocommerce.plugin_auth.disconnect_plugin', array(
+                $response = wp_remote_post($api_url . '/api/method/bu_ecommerce_integrations.api.woocommerce.plugin_auth.disconnect_plugin', array(
                     'timeout' => 5,
                     'body' => array(
                         'store_domain' => $domain,
                         'access_token' => $access_token
                     )
                 ));
+
+                if (is_wp_error($response)) {
+                    self::log('Shipkia remote disconnect failed: ' . $response->get_error_message(), 'debug');
+                    // We continue to disconnect locally anyway
+                }
             }
 
             self::disconnect_locally();
 
             return array(
                 'success' => true,
-                'message' => __('Disconnected from Shipkia', 'shipkia-shipment-tracking')
+                'message' => __('Disconnected from Shipkia successfully (Local refresh recommended if settings page still shows old data).', 'shipkia-shipment-tracking')
             );
         } catch (Exception $e) {
             self::disconnect_locally();
