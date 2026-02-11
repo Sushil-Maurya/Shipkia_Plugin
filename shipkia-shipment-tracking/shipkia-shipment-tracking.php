@@ -62,6 +62,7 @@ class Shipkia_Shipment_Tracking
     {
         // Core
         require_once SHIPKIA_Tracking_PATH . 'includes/core/class-helpers.php';
+        require_once SHIPKIA_Tracking_PATH . 'includes/core/class-logger.php';
         require_once SHIPKIA_Tracking_PATH . 'includes/core/class-tracking-meta.php';
         require_once SHIPKIA_Tracking_PATH . 'includes/core/class-auth.php';
 
@@ -140,13 +141,6 @@ register_activation_hook(__FILE__, 'shipkia_plugin_activated');
 
 function shipkia_plugin_activated()
 {
-    // Attempt auto-sync on activation
-    $result = Shipkia_Auth::auto_sync_on_activate();
-    $success = is_array($result) ? $result['success'] : $result;
-    
-    if (!$success) {
-        // If auto-sync fails, fall back to auto-connect check
-        delete_transient('shipkia_auto_connect_checked');
-        set_transient('shipkia_trigger_auto_connect', true, 60);
-    }
+    // Mark that we just activated to trigger redirect and confirmation UI
+    set_transient('shipkia_plugin_just_activated', true, 60);
 }

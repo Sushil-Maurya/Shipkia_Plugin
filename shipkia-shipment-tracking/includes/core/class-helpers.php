@@ -78,3 +78,18 @@ class Shipkia_Helpers
         return 'yes' === get_option('shipkia_tracking_new_tab', 'yes');
     }
 }
+
+/**
+ * Global Helper Function for Logging
+ * 
+ * @param string $message
+ * @param string $level
+ * @param array $context
+ * @param string $source
+ */
+function shipkia_log($message, $level = 'info', $context = array(), $source = 'shipkia-connection')
+{
+    if (class_exists('Shipkia_Logger')) {
+        Shipkia_Logger::add($message, $level, $context, $source);
+    }
+}
