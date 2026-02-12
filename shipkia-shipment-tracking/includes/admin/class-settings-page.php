@@ -302,13 +302,13 @@ class Shipkia_Settings_Page
                                 <span class="dashicons dashicons-update" style="font-size: 16px; vertical-align: middle; line-height: 28px;"></span>
                                 Sync Now
                             </button>
-                            <?php if ($status['created_from'] === 'Plugin'): 
+                            <?php if ($status['created_from'] === 'Plugin' && !$status['initial_sync_done']): 
                                 $app_url = get_option('shipkia_app_url', 'https://app.shipkia.com');
                                 $sync_url = rtrim($app_url, '/') . '/integrations?sync_shop=' . urlencode($status['store_id']) . '&platform=woocommerce';
                             ?>
-                                <a href="<?php echo esc_url($sync_url); ?>" target="_blank" class="button button-secondary">
+                                <a href="<?php echo esc_url($sync_url); ?>" id="shipkia-sync-order-product-link" target="_blank" class="button button-secondary">
                                     <span class="dashicons dashicons-cloud-upload" style="font-size: 16px; vertical-align: middle; line-height: 28px;"></span>
-                                    Sync Order/Product
+                                    Sync to Shipkia
                                 </a>
                             <?php endif; ?>
                             <button type="button" id="shipkia-disconnect-btn" class="button button-secondary">
@@ -407,7 +407,18 @@ class Shipkia_Settings_Page
 
                 performSync(false); // Initial attempt without force creating
             });
-            
+
+            $('#shipkia-sync-order-product-link').on('click', function(e) {
+                var $link = $(this);
+                // Mark as sync requested locally before redirecting
+                $.post(ajaxurl, {
+                    action: 'shipkia_mark_sync_requested',
+                    nonce: '<?php echo wp_create_nonce("shipkia_connection_nonce"); ?>'
+                });
+                // Hide immediately in this tab
+                $link.hide();
+            });
+
             $('#shipkia-disconnect-btn').on('click', function() {
                 if(!confirm('Are you sure you want to disconnect? This will stop all synchronization. You can reconnect later.')) return;
                 var $btn = $(this);
@@ -540,6 +551,7 @@ add_action('wp_ajax_shipkia_sync_platform', 'shipkia_handle_sync_ajax');
 add_action('wp_ajax_shipkia_remove_platform', 'shipkia_handle_remove_ajax');
 add_action('wp_ajax_shipkia_reconnect_platform', 'shipkia_handle_reconnect_ajax');
 add_action('wp_ajax_shipkia_get_auth_url', 'shipkia_handle_get_auth_url_ajax');
+add_action('wp_ajax_shipkia_mark_sync_requested', 'shipkia_handle_mark_sync_requested_ajax');
 
 function shipkia_handle_reconnect_ajax()
 {
@@ -679,6 +691,18 @@ function shipkia_handle_sync_ajax()
 add_action('update_option_shipkia_tracking_enabled', 'shipkia_on_settings_update');
 add_action('update_option_shipkia_tracking_button_text', 'shipkia_on_settings_update');
 add_action('update_option_shipkia_tracking_new_tab', 'shipkia_on_settings_update');
+
+function shipkia_handle_mark_sync_requested_ajax()
+{
+    check_ajax_referer('shipkia_connection_nonce', 'nonce');
+
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(array('message' => __('Unauthorized', 'shipkia-shipment-tracking')));
+    }
+
+    update_option('shipkia_initial_sync_done', true);
+    wp_send_json_success();
+}
 
 function shipkia_on_settings_update() {
     Shipkia_Auth::sync_settings();

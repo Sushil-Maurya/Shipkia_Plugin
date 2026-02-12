@@ -239,7 +239,8 @@ class Shipkia_Auth
                     isset($data['is_active']) ? $data['is_active'] : true,
                     isset($data['created_from']) ? $data['created_from'] : 'Plugin',
                     isset($data['access_token']) ? $data['access_token'] : null,
-                    isset($data['refresh_token']) ? $data['refresh_token'] : null
+                    isset($data['refresh_token']) ? $data['refresh_token'] : null,
+                    isset($data['initial_sync_done']) ? (bool)$data['initial_sync_done'] : false
                 );
 
                 self::log('Shipkia: Auto-sync successful - store connected');
@@ -476,9 +477,10 @@ class Shipkia_Auth
     /**
      * Store connection data securely (Tokens removed)
      */
-    private static function store_connection_data($store_id, $platform_url = null, $domain = null, $api_connected = false, $webhooks_active = false, $is_active = true, $created_from = null, $api_key = null, $api_secret = null)
+    private static function store_connection_data($store_id, $platform_url = null, $domain = null, $api_connected = false, $webhooks_active = false, $is_active = true, $created_from = null, $api_key = null, $api_secret = null, $initial_sync_done = false)
     {
         update_option('shipkia_connected', true);
+        update_option('shipkia_initial_sync_done', $initial_sync_done);
         
         // Clear deprecated token fields
         delete_option('shipkia_access_token');
@@ -818,6 +820,7 @@ class Shipkia_Auth
         delete_option('shipkia_webhooks_active');
         delete_option('shipkia_is_active');
         delete_option('shipkia_created_from');
+        delete_option('shipkia_initial_sync_done');
         
         delete_transient('shipkia_auto_connect_checked');
         delete_transient('shipkia_connection_verified');
@@ -876,6 +879,7 @@ class Shipkia_Auth
             'api_connected' => $api_connected,
             'webhooks_active' => $webhooks_active,
             'is_active' => (bool) get_option('shipkia_is_active', false),
+            'initial_sync_done' => (bool) get_option('shipkia_initial_sync_done', false),
             'created_from' => $created_from
         );
     }
