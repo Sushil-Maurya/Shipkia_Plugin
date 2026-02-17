@@ -5,6 +5,9 @@ Plugin URI:  https://shipkia.com/
 Description: Adds Shipkia tracking number to WooCommerce Orders and displays on Tracking page.
 Version:     1.0.0
 Author:      Shipkia
+Author URI:  https://shipkia.com/
+License:     GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: shipkia-shipment-tracking
 Domain Path: /languages
 */
