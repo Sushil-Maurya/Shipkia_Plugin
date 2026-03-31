@@ -20,28 +20,21 @@ class Shipkia_Helpers
      */
     public static function get_tracking_url($order_id)
     {
+        if (!function_exists('wc_get_order')) {
+            return '';
+        }
+
         $order = wc_get_order($order_id);
         if (!$order) {
             return '';
         }
 
         // Attempt to get the direct tracking URL first
-        $url = $order->get_meta('shipkia_tracking_url', true);
+        $url = $order->get_meta('_shipkia_tracking_url', true);
 
         if (!empty($url)) {
             return $url;
         }
-
-        // Fallback for legacy manually entered numbers
-        // $tracking_number = $order->get_meta('_shipkia_tracking_number', true);
-        // if (!empty($tracking_number)) {
-        //     // Fallback template
-        //     $template = get_option('shipkia_tracking_url_template', 'https://tracking.shipkia.com/?tracking={tracking}');
-        //     if (empty($template)) {
-        //         $template = 'https://tracking.shipkia.com/?tracking={tracking}';
-        //     }
-        //     return str_replace('{tracking}', $tracking_number, $template);
-        // }
 
         return '';
     }
@@ -53,6 +46,10 @@ class Shipkia_Helpers
      */
     public static function is_tracking_enabled()
     {
+        if (!function_exists('get_option')) {
+            return false;
+        }
+
         $enabled = get_option('shipkia_tracking_enabled', 'yes');
         return 'yes' === $enabled;
     }
@@ -64,8 +61,13 @@ class Shipkia_Helpers
      */
     public static function get_button_text()
     {
-        $text = get_option('shipkia_tracking_button_text', __('Track', 'shipkia-shipment-tracking'));
-        return !empty($text) ? $text : __('Track', 'shipkia-shipment-tracking');
+        if (!function_exists('get_option')) {
+            return 'Track';
+        }
+
+        $default_text = function_exists('__') ? __('Track', 'shipkia-shipment-tracking') : 'Track';
+        $text = get_option('shipkia_tracking_button_text', $default_text);
+        return !empty($text) ? $text : $default_text;
     }
 
     /**
@@ -75,6 +77,10 @@ class Shipkia_Helpers
      */
     public static function open_in_new_tab()
     {
+        if (!function_exists('get_option')) {
+            return true;
+        }
+
         return 'yes' === get_option('shipkia_tracking_new_tab', 'yes');
     }
 }

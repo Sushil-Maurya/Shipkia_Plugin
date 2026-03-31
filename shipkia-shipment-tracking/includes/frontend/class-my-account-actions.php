@@ -25,31 +25,37 @@ class Shipkia_My_Account_Actions
     /**
      * Display Tracking Info in Order Details
      */
-    public function display_tracking_info($order)
+    public function display_tracking_info($order_id)
     {
-        if (!Shipkia_Helpers::is_tracking_enabled()) {
+        if (!function_exists('wc_get_order')) {
             return;
         }
 
-        $order_id = $order->get_id();
+        $order = wc_get_order($order_id);
+        if (!$order) {
+            return;
+        }
+
         $url = Shipkia_Helpers::get_tracking_url($order_id);
 
         if (!empty($url)) {
-            $awb = $order->get_meta('shipkia_awb_number', true);
-            $status = $order->get_meta('shipkia_delivery_status', true);
+            $tracking_url = $order->get_meta('_shipkia_tracking_url', true);
+            $status = $order->get_meta('_shipkia_delivery_status', true);
+            $awb = $order->get_meta('_shipkia_awb_number', true);
             $target = Shipkia_Helpers::open_in_new_tab() ? '_blank' : '_self';
 
             echo '<div class="shipkia-tracking-details" style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border: 1px solid #eee;">';
-            echo '<h3>' . __('Shipment Tracking', 'shipkia-shipment-tracking') . '</h3>';
+            echo '<h4>' . (function_exists('__') ? __('Shipment Tracking', 'shipkia-shipment-tracking') : 'Shipment Tracking') . '</h4>';
 
             if (!empty($status)) {
-                echo '<p><strong>' . __('Status:', 'shipkia-shipment-tracking') . '</strong> ' . esc_html($status) . '</p>';
-            }
-            if (!empty($awb)) {
-                echo '<p><strong>' . __('AWB Number:', 'shipkia-shipment-tracking') . '</strong> ' . esc_html($awb) . '</p>';
+                echo '<p><strong>' . (function_exists('__') ? __('Status', 'shipkia-shipment-tracking') : 'Status') . ':</strong> ' . (function_exists('esc_html') ? esc_html($status) : $status) . '</p>';
             }
 
-            // echo '<a href="' . esc_url($url) . '" class="button" target="' . $target . '">' . esc_html(Shipkia_Helpers::get_button_text()) . '</a>';
+            if (!empty($awb)) {
+                echo '<p><strong>' . (function_exists('__') ? __('AWB Number', 'shipkia-shipment-tracking') : 'AWB Number') . ':</strong> ' . (function_exists('esc_html') ? esc_html($awb) : $awb) . '</p>';
+            }
+
+            echo '<a href="' . (function_exists('esc_url') ? esc_url($url) : $url) . '" target="' . esc_attr($target) . '" class="button">' . (function_exists('__') ? __('Track Shipment', 'shipkia-shipment-tracking') : 'Track Shipment') . '</a>';
             echo '</div>';
         }
     }

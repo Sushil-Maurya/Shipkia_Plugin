@@ -33,14 +33,19 @@ class Shipkia_Order_Tracking_Display
         if (!empty($url)) {
             $target = Shipkia_Helpers::open_in_new_tab() ? '_blank' : '_self';
             $text = Shipkia_Helpers::get_button_text();
-            $status = $order->get_meta('shipkia_delivery_status', true);
+            $status = $order->get_meta('_shipkia_delivery_status', true);
 
             echo '<div class="shipkia-tracking-status">';
             if (!empty($status)) {
-                echo '<p><strong>' . __('Delivery Status:', 'shipkia-shipment-tracking') . '</strong> ' . esc_html($status) . '</p>';
+                echo '<p class="shipkia-tracking-status-text">';
+                echo '<strong>' . (function_exists('__') ? __('Tracking Status', 'shipkia-shipment-tracking') : 'Tracking Status') . ':</strong> ';
+                echo '<span>' . (function_exists('esc_html') ? esc_html($status) : $status) . '</span>';
+                echo '</p>';
             }
-            echo '<p><a href="' . esc_url($url) . '" class="button tracking-btn shipkia-track-btn" target="' . $target . '">' . esc_html($text) . '</a></p>';
-            echo '</div>';
+
+            echo '<p class="shipkia-track-btn-wrapper">';
+            echo '<a href="' . (function_exists('esc_url') ? esc_url($url) : $url) . '" target="' . esc_attr($target) . '" class="button shipkia-track-link">' . (function_exists('esc_html') ? esc_html($text) : $text) . '</a>';
+            echo '</p>';
         }
     }
 }
