@@ -15,11 +15,15 @@ class Shipkia_My_Account_Actions
      */
     public function __construct()
     {
-        // Add to Order View (My Account)
-        add_action('woocommerce_order_details_after_order_table', array($this, 'display_tracking_info'));
+        if (function_exists('add_action')) {
+            // Add to Order View (My Account)
+            add_action('woocommerce_order_details_after_order_table', array($this, 'display_tracking_info'));
+        }
 
-        // Add Track Button to Orders List
-        add_filter('woocommerce_my_account_my_orders_actions', array($this, 'add_track_button'), 10, 2);
+        if (function_exists('add_filter')) {
+            // Add Track Button to Orders List
+            add_filter('woocommerce_my_account_my_orders_actions', array($this, 'add_track_button'), 10, 2);
+        }
     }
 
     /**
@@ -55,7 +59,7 @@ class Shipkia_My_Account_Actions
                 echo '<p><strong>' . (function_exists('__') ? __('AWB Number', 'shipkia-shipment-tracking') : 'AWB Number') . ':</strong> ' . (function_exists('esc_html') ? esc_html($awb) : $awb) . '</p>';
             }
 
-            echo '<a href="' . (function_exists('esc_url') ? esc_url($url) : $url) . '" target="' . esc_attr($target) . '" class="button">' . (function_exists('__') ? __('Track Shipment', 'shipkia-shipment-tracking') : 'Track Shipment') . '</a>';
+            echo '<a href="' . (function_exists('esc_url') ? esc_url($url) : $url) . '" target="' . (function_exists('esc_attr') ? esc_attr($target) : $target) . '" class="button">' . (function_exists('__') ? __('Track Shipment', 'shipkia-shipment-tracking') : 'Track Shipment') . '</a>';
             echo '</div>';
         }
     }
@@ -73,7 +77,7 @@ class Shipkia_My_Account_Actions
 
         if (!empty($url)) {
             $actions['shipkia_track'] = array(
-                'url' => esc_url($url),
+                'url' => function_exists('esc_url') ? esc_url($url) : $url,
                 'name' => Shipkia_Helpers::get_button_text(),
             );
         }

@@ -12,18 +12,20 @@ class Shipkia_Tracking_Meta
 
     public function __construct()
     {
-        // Add Meta Box for Tracking Info
-        add_action('add_meta_boxes', array($this, 'add_tracking_meta_box'));
+        if (function_exists('add_action')) {
+            // Add Meta Box for Tracking Info
+            add_action('add_meta_boxes', array($this, 'add_tracking_meta_box'));
+            
+            // Also support HPOS (High Performance Order Storage)
+            add_action('manage_shop_order_posts_custom_column', array($this, 'render_tracking_column'), 20, 2);
+            add_action('manage_woocommerce_page_wc-orders_custom_column', array($this, 'render_tracking_column_hpos'), 20, 2);
+        }
 
-        // Remove save action as fields are read-only (synced from external source)
-        // add_action( 'woocommerce_process_shop_order_meta', array( $this, 'save_tracking_field' ), 45, 2 );
-
-        // Add Column to Orders List
-        add_filter('manage_edit-shop_order_columns', array($this, 'add_tracking_column'), 20);
-        add_action('manage_shop_order_posts_custom_column', array($this, 'render_tracking_column'), 20, 2);
-        // Also support HPOS (High Performance Order Storage)
-        add_filter('manage_woocommerce_page_wc-orders_columns', array($this, 'add_tracking_column'), 20);
-        add_action('manage_woocommerce_page_wc-orders_custom_column', array($this, 'render_tracking_column_hpos'), 20, 2);
+        if (function_exists('add_filter')) {
+            // Add Column to Orders List
+            add_filter('manage_edit-shop_order_columns', array($this, 'add_tracking_column'), 20);
+            add_filter('manage_woocommerce_page_wc-orders_columns', array($this, 'add_tracking_column'), 20);
+        }
     }
 
     /**
@@ -50,14 +52,16 @@ class Shipkia_Tracking_Meta
         // HPOS Support
         if (class_exists('\Automattic\WooCommerce\Internal\DataStores\Orders\CustomOrdersTableController') && function_exists('wc_get_page_screen_id')) {
             $screen = wc_get_page_screen_id('shop_order');
-            add_meta_box(
-                'shipkia_tracking_meta_box',
-                function_exists('__') ? __('Shipkia Shipment Tracking', 'shipkia-shipment-tracking') : 'Shipkia Shipment Tracking',
-                array($this, 'render_tracking_meta_box'),
-                $screen,
-                'normal',
-                'high'
-            );
+            if (function_exists('add_meta_box')) {
+                add_meta_box(
+                    'shipkia_tracking_meta_box',
+                    function_exists('__') ? __('Shipkia Shipment Tracking', 'shipkia-shipment-tracking') : 'Shipkia Shipment Tracking',
+                    array($this, 'render_tracking_meta_box'),
+                    $screen,
+                    'normal',
+                    'high'
+                );
+            }
         }
     }
 
@@ -71,7 +75,7 @@ class Shipkia_Tracking_Meta
         }
 
         // Compatibility: Get Order ID
-        $order = ($post_or_order_object instanceof WP_Post) ? wc_get_order($post_or_order_object->ID) : $post_or_order_object;
+        $order = (class_exists('WP_Post') && $post_or_order_object instanceof WP_Post) ? wc_get_order($post_or_order_object->ID) : $post_or_order_object;
 
         if (!$order) {
             return;

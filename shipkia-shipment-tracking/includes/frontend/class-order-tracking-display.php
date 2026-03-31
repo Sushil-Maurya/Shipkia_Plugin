@@ -15,8 +15,10 @@ class Shipkia_Order_Tracking_Display
      */
     public function __construct()
     {
-        // Show on Order Tracking Page
-        add_action('woocommerce_order_tracking_status', array($this, 'display_on_tracking_page'), 10, 1);
+        if (function_exists('add_action')) {
+            // Show on Order Tracking Page
+            add_action('woocommerce_order_tracking_status', array($this, 'display_on_tracking_page'), 10, 1);
+        }
     }
 
     /**
@@ -44,7 +46,7 @@ class Shipkia_Order_Tracking_Display
             }
 
             echo '<p class="shipkia-track-btn-wrapper">';
-            echo '<a href="' . (function_exists('esc_url') ? esc_url($url) : $url) . '" target="' . esc_attr($target) . '" class="button shipkia-track-link">' . (function_exists('esc_html') ? esc_html($text) : $text) . '</a>';
+            echo '<a href="' . (function_exists('esc_url') ? esc_url($url) : $url) . '" target="' . (function_exists('esc_attr') ? esc_attr($target) : $target) . '" class="button shipkia-track-link">' . (function_exists('esc_html') ? esc_html($text) : $text) . '</a>';
             echo '</p>';
         }
     }

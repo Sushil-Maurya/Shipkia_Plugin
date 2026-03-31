@@ -15,7 +15,9 @@ class Shipkia_Admin_Menu
      */
     public function __construct()
     {
-        add_action('admin_menu', array($this, 'register_menus'));
+        if (function_exists('add_action')) {
+            add_action('admin_menu', array($this, 'register_menus'));
+        }
     }
 
     /**
@@ -23,10 +25,14 @@ class Shipkia_Admin_Menu
      */
     public function register_menus()
     {
+        if (!function_exists('add_menu_page')) {
+            return;
+        }
+
         // Top Level Menu
         add_menu_page(
-            __('Shipkia Tracking', 'shipkia-shipment-tracking'),
-            __('Shipkia Tracking', 'shipkia-shipment-tracking'),
+            (function_exists('__') ? __('Shipkia Tracking', 'shipkia-shipment-tracking') : 'Shipkia Tracking'),
+            (function_exists('__') ? __('Shipkia Tracking', 'shipkia-shipment-tracking') : 'Shipkia Tracking'),
             'manage_woocommerce',
             'shipkia-shipment-tracking',
             array('Shipkia_Settings_Page', 'render'),
@@ -34,25 +40,27 @@ class Shipkia_Admin_Menu
             58
         );
 
-        // Settings Submenu
-        add_submenu_page(
-            'shipkia-shipment-tracking',
-            __('Settings', 'shipkia-shipment-tracking'),
-            __('Settings', 'shipkia-shipment-tracking'),
-            'manage_woocommerce',
-            'shipkia-shipment-tracking',
-            array('Shipkia_Settings_Page', 'render')
-        );
+        if (function_exists('add_submenu_page')) {
+            // Settings Submenu
+            add_submenu_page(
+                'shipkia-shipment-tracking',
+                (function_exists('__') ? __('Settings', 'shipkia-shipment-tracking') : 'Settings'),
+                (function_exists('__') ? __('Settings', 'shipkia-shipment-tracking') : 'Settings'),
+                'manage_woocommerce',
+                'shipkia-shipment-tracking',
+                array('Shipkia_Settings_Page', 'render')
+            );
 
-        // Orders Tracking Submenu
-        add_submenu_page(
-            'shipkia-shipment-tracking',
-            __('Orders Tracking', 'shipkia-shipment-tracking'),
-            __('Orders Tracking', 'shipkia-shipment-tracking'),
-            'manage_woocommerce',
-            'shipkia-orders-tracking',
-            array('Shipkia_Orders_Tracking_Page', 'render')
-        );
+            // Orders Tracking Submenu
+            add_submenu_page(
+                'shipkia-shipment-tracking',
+                (function_exists('__') ? __('Orders Tracking', 'shipkia-shipment-tracking') : 'Orders Tracking'),
+                (function_exists('__') ? __('Orders Tracking', 'shipkia-shipment-tracking') : 'Orders Tracking'),
+                'manage_woocommerce',
+                'shipkia-orders-tracking',
+                array('Shipkia_Orders_Tracking_Page', 'render')
+            );
+        }
     }
 }
 
