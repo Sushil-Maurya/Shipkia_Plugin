@@ -167,121 +167,126 @@ class Shipkia_Auth
     public static function auto_sync_on_activate($create_new = true)
     {
         try {
-            self::log('Starting auto_sync_on_activate...');
+            self::log('Starting auto_sync_on_activate. Create new: ' . ($create_new ? 'Yes' : 'No'));
             $domain = self::get_store_domain();
             $api_url = self::get_api_base_url();
             
-
-
-            // Ensure REST API keys exist
-            self::log('Calling ensure_rest_api_keys...');
-            $keys = self::ensure_rest_api_keys();
+            $is_connected = self::is_connected();
+            $keys = null;
             
-            if ($keys) {
-                self::log('Keys obtained successfully.');
-            } else {
-                self::log('Failed to obtain keys.', 'error');
-            }
-            
-            $body_args = array(
-                'domain' => $domain,
-                'platform' => 'woocommerce',
-                'secret' => self::get_plugin_secret(),
-                'create_new' => $create_new ? 'true' : 'false'
-            );
-            
-            if ($keys) {
-                $body_args['consumer_key'] = $keys['consumer_key'];
-                $body_args['consumer_secret'] = $keys['consumer_secret'];
+            // Try to use existing cached keys first if we have them
+            $cached_key = function_exists('get_option') ? get_option('shipkia_consumer_key_plaintext') : null;
+            $cached_secret = function_exists('get_option') ? get_option('shipkia_consumer_secret_plaintext') : null;
+            if ($cached_key && $cached_secret) {
+                $keys = array(
+                    'consumer_key' => $cached_key,
+                    'consumer_secret' => $cached_secret
+                );
             }
 
-            // ATTACH LOGS TO REQUEST
-            $body_args['client_logs'] = json_encode(self::$log_buffer);
-    
-            if (function_exists('wp_remote_post')) {
-                $response = wp_remote_post($api_url . '/api/method/bu_ecommerce_integrations.api.woocommerce.auto_sync.auto_sync', array(
-                    'timeout' => 15,
-                    'body' => $body_args
-                ));
-    
-                if (function_exists('is_wp_error') && is_wp_error($response)) {
-                    self::log('Shipkia auto-sync failed: ' . $response->get_error_message(), 'error');
-                    return array('success' => false, 'message' => $response->get_error_message());
-                }
-    
-                $body = json_decode(function_exists('wp_remote_retrieve_body') ? wp_remote_retrieve_body($response) : '', true);
-            } else {
-                return array('success' => false, 'message' => 'wp_remote_post is not available');
+            // PHASE 1: DISCOVERY - Try to sync with what we have (or nothing)
+            // This allows the ERP to identify an already connected store by domain.
+            self::log('Auto-sync Phase 1 (Discovery): Attempting sync with existing/no keys...');
+            $data = self::send_auto_sync_request($domain, $api_url, $keys, false); // create_new=false for discovery
+
+            // If discovery successful, we are done!
+            if ($data && isset($data['connected']) && $data['connected'] === true) {
+                self::log('Discovery successful! Store already connected in backend.');
+                self::handle_auto_sync_response($data, $domain);
+                return array('success' => true, 'message' => isset($data['message']) ? $data['message'] : 'Connected successfully');
             }
 
-            // Log the raw response for debugging
-            self::log('Auto-sync raw response: ' . print_r($body, true), 'debug');
-
-            // Check for Frappe exceptions first
-            if (isset($body['exception']) || isset($body['exc_type'])) {
-                $error_msg = 'Backend error occurred';
-                if (isset($body['_server_messages'])) {
-                    $server_msgs = json_decode($body['_server_messages'], true);
-                    if ($server_msgs && is_array($server_msgs)) {
-                        $error_msg = implode(', ', $server_msgs);
+            // PHASE 2: REGISTRATION - If discovery failed and we are allowed to create new
+            if ($create_new) {
+                self::log('Discovery failed or store not found. Phase 2: Generating new keys and registering...');
+                $keys = self::ensure_rest_api_keys();
+                
+                if ($keys) {
+                    $data = self::send_auto_sync_request($domain, $api_url, $keys, true);
+                    
+                    if ($data && isset($data['connected']) && $data['connected'] === true) {
+                        self::handle_auto_sync_response($data, $domain);
+                        return array('success' => true, 'message' => isset($data['message']) ? $data['message'] : 'Connected successfully');
                     }
-                } elseif (isset($body['message']) && is_string($body['message'])) {
-                    $error_msg = $body['message'];
                 }
-                self::log('Auto-sync: Backend exception: ' . $error_msg, 'error');
-                return array('success' => false, 'message' => $error_msg);
             }
 
-            // Check if response has message wrapper (standard Frappe format)
-            if (!$body || !isset($body['message'])) {
-                self::log('Auto-sync: Invalid response structure: ' . print_r($body, true), 'error');
-                return array('success' => false, 'message' => 'Invalid response from server. Please check backend logs.');
+            // If we get here, it means we couldn't connect automatically
+            if ($data && isset($data['store_not_found']) && $data['store_not_found'] === true) {
+                return array('success' => false, 'store_not_found' => true, 'message' => $data['message']);
             }
 
-            $data = $body['message'];
-
-            // Handle if store NOT found on backend (stale connection)
-            if (isset($data['status']) && $data['status'] === 'error' && (strpos($data['message'], 'not found') !== false || strpos($data['message'], 'not exist') !== false)) {
-                self::log("Auto-sync: Store not found on backend. Clearing local connection.", "warning");
-                self::disconnect_locally();
-                return array('success' => false, 'message' => $data['message'], 'store_not_found' => true);
-            }
-
-            // Check if auto-sync was successful
-            if (isset($data['connected']) && $data['connected'] === true) {
-                // Store tokens and connection info directly
-                self::store_connection_data(
-                    $data['store_id'],
-                    $data['platform_url'],
-                    $domain,
-                    isset($data['api_connected']) ? $data['api_connected'] : false,
-                    isset($data['webhooks_active']) ? $data['webhooks_active'] : false,
-                    isset($data['is_active']) ? $data['is_active'] : true,
-                    isset($data['created_from']) ? $data['created_from'] : 'Plugin',
-                    isset($data['access_token']) ? $data['access_token'] : null,
-                    isset($data['refresh_token']) ? $data['refresh_token'] : null,
-                    isset($data['initial_sync_done']) ? (bool)$data['initial_sync_done'] : false
-                );
-
-                self::log('Shipkia: Auto-sync successful - store connected');
-                return array('success' => true, 'message' => isset($data['message']) ? $data['message'] : 'Store connected successfully');
-            }
-
-            // Check for store not found (confirmation needed)
-            if (isset($data['store_not_found']) && $data['store_not_found'] === true) {
-                return array(
-                    'success' => false,
-                    'store_not_found' => true,
-                    'message' => $data['message']
-                );
-            }
-
-            return array('success' => false, 'message' => isset($data['message']) ? $data['message'] : 'Unknown error');
+            return array('success' => false, 'message' => isset($data['message']) ? $data['message'] : 'Could not establish connection automatically.');
+            
         } catch (Exception $e) {
             self::log('Shipkia auto-sync exception: ' . $e->getMessage(), 'error');
             return array('success' => false, 'message' => $e->getMessage());
         }
     }
+
+    /**
+     * Helper to send sync request
+     */
+    private static function send_auto_sync_request($domain, $api_url, $keys = null, $create_new = false)
+    {
+        $body_args = array(
+            'domain' => $domain,
+            'platform' => 'woocommerce',
+            'secret' => self::get_plugin_secret(),
+            'create_new' => $create_new ? 'true' : 'false'
+        );
+        
+        if ($keys) {
+            $body_args['consumer_key'] = $keys['consumer_key'];
+            $body_args['consumer_secret'] = $keys['consumer_secret'];
+        }
+
+        // ATTACH LOGS TO REQUEST
+        $body_args['client_logs'] = json_encode(self::$log_buffer);
+
+        if (function_exists('wp_remote_post')) {
+            $response = wp_remote_post($api_url . '/api/method/bu_ecommerce_integrations.api.woocommerce.auto_sync.auto_sync', array(
+                'timeout' => 15,
+                'body' => $body_args
+            ));
+
+            if (function_exists('is_wp_error') && is_wp_error($response)) {
+                self::log('Request failed: ' . $response->get_error_message(), 'error');
+                return null;
+            }
+
+            $body = json_decode(function_exists('wp_remote_retrieve_body') ? wp_remote_retrieve_body($response) : '', true);
+            
+            // Log raw response for debugging
+            self::log('Raw response: ' . print_r($body, true), 'debug');
+            
+            if (isset($body['message'])) {
+                return $body['message'];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Helper to handle response data
+     */
+    private static function handle_auto_sync_response($data, $domain)
+    {
+        self::store_connection_data(
+            $data['store_id'],
+            $data['platform_url'],
+            $domain,
+            isset($data['api_connected']) ? $data['api_connected'] : false,
+            isset($data['webhooks_active']) ? $data['webhooks_active'] : false,
+            isset($data['is_active']) ? $data['is_active'] : true,
+            isset($data['created_from']) ? $data['created_from'] : 'Plugin',
+            isset($data['access_token']) ? $data['access_token'] : null,
+            isset($data['refresh_token']) ? $data['refresh_token'] : null,
+            isset($data['initial_sync_done']) ? (bool)$data['initial_sync_done'] : false
+        );
+        self::log('Shipkia: Store connection established/updated.');
+    }
+
 
     /**
      * Attempt to auto-connect to Shipkia platform
@@ -531,6 +536,12 @@ class Shipkia_Auth
             update_option('shipkia_connected', true);
             update_option('shipkia_initial_sync_done', $initial_sync_done);
             
+            // Clear activation notices and triggers since we are now connected
+            if (function_exists('delete_transient')) {
+                delete_transient('shipkia_show_activation_notice');
+                delete_transient('shipkia_trigger_auto_connect');
+            }
+
             // Clear deprecated token fields
             if (function_exists('delete_option')) {
                 delete_option('shipkia_access_token');
@@ -743,29 +754,30 @@ class Shipkia_Auth
         }
         
         // 2. If no valid cache, Check for existing keys and REMOVE THEM (because we can't recover plaintext)
-        // We only remove keys that look like they were auto-generated by us
-        $existing_id = $wpdb->get_var(
+        // We remove ALL keys that look like they were auto-generated by us to avoid clutter
+        $existing_keys = $wpdb->get_col(
             "SELECT key_id FROM {$table_name} 
              WHERE permissions = 'read_write' 
-             AND description LIKE '%Shipkia%'"
+             AND (description LIKE 'Shipkia Integration%' OR description LIKE 'ShipKia Integration%')"
         );
         
-        if ($existing_id) {
-            self::log('Ensure keys: Found existing legacy key ID: ' . $existing_id . '. Deleting.');
-            // Delete old keys to avoid clutter and ensure clean state
-            $wpdb->delete($table_name, array('key_id' => $existing_id));
+        if (!empty($existing_keys)) {
+            self::log('Ensure keys: Found ' . count($existing_keys) . ' existing Shipkia keys. Deleting.');
+            foreach ($existing_keys as $existing_id) {
+                $wpdb->delete($table_name, array('key_id' => $existing_id));
+            }
         }
         
         // 3. Create new keys
-        $user_id = get_current_user_id();
+        $user_id = function_exists('get_current_user_id') ? get_current_user_id() : 0;
         self::log('Ensure keys: Creating new keys for User ID: ' . $user_id);
         if (!$user_id) $user_id = 1;
         
         // WooCommerce keys are char(43) for secret. Prefix 'cs_' is 3 chars. 
         // So max random length is 40.
         // consumer_key is char(64) but we keep it consistent.
-        $consumer_key = 'ck_' . wp_generate_password(40, false, false);
-        $consumer_secret = 'cs_' . wp_generate_password(40, false, false);
+        $consumer_key = 'ck_' . (function_exists('wp_generate_password') ? wp_generate_password(40, false, false) : bin2hex(random_bytes(20)));
+        $consumer_secret = 'cs_' . (function_exists('wp_generate_password') ? wp_generate_password(40, false, false) : bin2hex(random_bytes(20)));
         
         // Hash the consumer key for storage (WooCommerce expects a hash)
         $consumer_key_hash = function_exists('wc_api_hash') ? wc_api_hash($consumer_key) : hash_hmac('sha256', $consumer_key, 'wc-api');
@@ -774,7 +786,7 @@ class Shipkia_Auth
             $table_name,
             array(
                 'user_id' => $user_id,
-                'description' => 'Shipkia Integration - Auto Generated',
+                'description' => 'ShipKia Integration - API (' . gmdate('Y-m-d H:i:s') . ')',
                 'permissions' => 'read_write',
                 'consumer_key' => $consumer_key_hash, 
                 'consumer_secret' => $consumer_secret,
