@@ -224,19 +224,30 @@ class Shipkia_Settings_Page
                         $btn.prop('disabled', true).text('<?php if (function_exists('_e')) _e('Initializing...', 'shipkia-shipment-tracking'); else echo 'Initializing...'; ?>');
                         $('#shipkia-init-message').html('');
                         
-                        $.post(ajaxurl, {
-                            action: 'shipkia_sync_platform',
-                            create_new: 1,
-                            nonce: '<?php echo function_exists('wp_create_nonce') ? wp_create_nonce("shipkia_connection_nonce") : ""; ?>'
-                        }, function(response) {
-                            if (response.success) {
-                                $('#shipkia-init-message').html('<div class="notice notice-success inline"><p>' + response.data.message + '</p></div>');
-                                setTimeout(function(){ location.reload(); }, 1500);
-                            } else {
-                                $('#shipkia-init-message').html('<div class="notice notice-error inline"><p>' + (response.data.message || 'Initialization failed') + '</p></div>');
-                                $btn.prop('disabled', false).text('<?php if (function_exists('_e')) _e('Initialize Store Connection', 'shipkia-shipment-tracking'); else echo 'Initialize Store Connection'; ?>');
-                            }
-                        });
+                        function performInit(createNew) {
+                            $.post(ajaxurl, {
+                                action: 'shipkia_sync_platform',
+                                create_new: createNew ? 1 : 0,
+                                nonce: '<?php echo function_exists('wp_create_nonce') ? wp_create_nonce("shipkia_connection_nonce") : ""; ?>'
+                            }, function(response) {
+                                if (response.success) {
+                                    $('#shipkia-init-message').html('<div class="notice notice-success inline"><p>' + response.data.message + '</p></div>');
+                                    setTimeout(function(){ location.reload(); }, 1500);
+                                } else {
+                                    if (!createNew && response.data && response.data.status === 'not_found') {
+                                        // Store not found on Shipkia - ask user to create new
+                                        if (confirm(response.data.message || '<?php if (function_exists('__')) echo esc_js(__('Store not found on Shipkia. Create a new connection?', 'shipkia-shipment-tracking')); else echo 'Store not found on Shipkia. Create a new connection?'; ?>')) {
+                                            performInit(true);
+                                            return;
+                                        }
+                                    }
+                                    $('#shipkia-init-message').html('<div class="notice notice-error inline"><p>' + (response.data.message || 'Initialization failed') + '</p></div>');
+                                    $btn.prop('disabled', false).text('<?php if (function_exists('_e')) _e('Initialize Store Connection', 'shipkia-shipment-tracking'); else echo 'Initialize Store Connection'; ?>');
+                                }
+                            });
+                        }
+                        
+                        performInit(false); // Try discovery first, then create if not found
                     });
                 });
                 </script>
