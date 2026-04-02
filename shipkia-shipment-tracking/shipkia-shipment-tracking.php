@@ -99,6 +99,11 @@ class Shipkia_Shipment_Tracking
         if (function_exists('add_action')) {
             add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
             add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
+            
+            // Add REST API routes
+            if (class_exists('Shipkia_Auth')) {
+                add_action('rest_api_init', array('Shipkia_Auth', 'register_rest_routes'));
+            }
         }
 
         // Auto-connect check (only in admin)
