@@ -42,7 +42,7 @@ class Shipkia_Tracking_Meta
 
         add_meta_box(
             'shipkia_tracking_meta_box',
-            function_exists('__') ? __('Shipkia Shipment Tracking', 'shipkia-shipment-tracking') : 'Shipkia Shipment Tracking',
+            function_exists('__') ? __('Shipkia Connect', 'shipkia-connect') : 'Shipkia Connect',
             array($this, 'render_tracking_meta_box'),
             'shop_order', // For legacy CPT
             'normal',
@@ -55,7 +55,7 @@ class Shipkia_Tracking_Meta
             if (function_exists('add_meta_box')) {
                 add_meta_box(
                     'shipkia_tracking_meta_box',
-                    function_exists('__') ? __('Shipkia Shipment Tracking', 'shipkia-shipment-tracking') : 'Shipkia Shipment Tracking',
+                    function_exists('__') ? __('Shipkia Connect', 'shipkia-connect') : 'Shipkia Connect',
                     array($this, 'render_tracking_meta_box'),
                     $screen,
                     'normal',
@@ -70,10 +70,6 @@ class Shipkia_Tracking_Meta
      */
     public function render_tracking_meta_box($post_or_order_object)
     {
-        if (!function_exists('wc_get_order')) {
-            return;
-        }
-
         // Compatibility: Get Order ID
         $order = (class_exists('WP_Post') && $post_or_order_object instanceof WP_Post) ? wc_get_order($post_or_order_object->ID) : $post_or_order_object;
 
@@ -91,16 +87,15 @@ class Shipkia_Tracking_Meta
         $shipkia_order_id = $order->get_meta('_shipkia_order_id', true);
 
         echo '<div class="shipkia_tracking_fields">';
-
         echo '<div class="shipkia-admin-row">';
 
         // AWB Number with Copy Button
         echo '<p class="form-field shipkia-col shipkia-awb-field">';
-        echo '<label for="shipkia_awb_number_display">' . (function_exists('__') ? __('AWB Number', 'shipkia-shipment-tracking') : 'AWB Number') . '</label>';
+        echo '<label for="shipkia_awb_number_display">' . esc_html__('AWB Number', 'shipkia-connect') . '</label>';
         echo '<span class="shipkia-input-wrapper">';
-        echo '<input type="text" id="shipkia_awb_number_display" value="' . (function_exists('esc_attr') ? esc_attr($awb) : $awb) . '" readonly style="background-color: #f0f0f1; cursor: text; user-select: text;" />';
+        echo '<input type="text" id="shipkia_awb_number_display" value="' . esc_attr($awb) . '" readonly style="background-color: #f0f0f1; cursor: text; user-select: text;" />';
         if (!empty($awb)) {
-            echo '<button type="button" class="button shipkia-copy-btn" data-copy="' . (function_exists('esc_attr') ? esc_attr($awb) : $awb) . '" title="' . (function_exists('__') ? __('Copy AWB', 'shipkia-shipment-tracking') : 'Copy AWB') . '">📋</button>';
+            echo '<button type="button" class="button shipkia-copy-btn" data-copy="' . esc_attr($awb) . '" title="' . esc_attr__('Copy AWB', 'shipkia-connect') . '">📋</button>';
         }
         echo '</span>';
         echo '</p>';
@@ -109,7 +104,7 @@ class Shipkia_Tracking_Meta
         if (function_exists('woocommerce_wp_text_input')) {
             woocommerce_wp_text_input(array(
                 'id' => 'shipkia_courier_partner_display',
-                'label' => function_exists('__') ? __('Courier Partner', 'shipkia-shipment-tracking') : 'Courier Partner',
+                'label' => esc_html__('Courier Partner', 'shipkia-connect'),
                 'value' => $courier,
                 'custom_attributes' => array('readonly' => 'readonly', 'disabled' => 'disabled'),
                 'wrapper_class' => 'shipkia-col',
@@ -118,7 +113,7 @@ class Shipkia_Tracking_Meta
             // Delivery Status
             woocommerce_wp_text_input(array(
                 'id' => 'shipkia_delivery_status_display',
-                'label' => function_exists('__') ? __('Delivery Status', 'shipkia-shipment-tracking') : 'Delivery Status',
+                'label' => esc_html__('Delivery Status', 'shipkia-connect'),
                 'value' => $status,
                 'custom_attributes' => array('readonly' => 'readonly', 'disabled' => 'disabled'),
                 'wrapper_class' => 'shipkia-col',
@@ -134,7 +129,7 @@ class Shipkia_Tracking_Meta
         if (function_exists('woocommerce_wp_text_input')) {
             woocommerce_wp_text_input(array(
                 'id' => 'shipkia_order_id_display',
-                'label' => function_exists('__') ? __('Shipkia Order ID', 'shipkia-shipment-tracking') : 'Shipkia Order ID',
+                'label' => esc_html__('Shipkia Order ID', 'shipkia-connect'),
                 'value' => $shipkia_order_id,
                 'custom_attributes' => array('readonly' => 'readonly', 'disabled' => 'disabled'),
                 'wrapper_class' => 'shipkia-col',
@@ -143,16 +138,15 @@ class Shipkia_Tracking_Meta
 
         // Tracking URL as clickable link
         echo '<p class="form-field shipkia-col">';
-        echo '<label for="shipkia_tracking_url_display">' . (function_exists('__') ? __('Tracking URL', 'shipkia-shipment-tracking') : 'Tracking URL') . '</label>';
+        echo '<label for="shipkia_tracking_url_display">' . esc_html__('Tracking URL', 'shipkia-connect') . '</label>';
         if (!empty($tracking_url)) {
-            echo '<a href="' . (function_exists('esc_url') ? esc_url($tracking_url) : $tracking_url) . '" target="_blank" class="button button-primary">' . (function_exists('__') ? __('Open Tracking Page', 'shipkia-shipment-tracking') : 'Open Tracking Page') . ' ↗</a>';
+            echo '<a href="' . esc_url($tracking_url) . '" target="_blank" class="button button-primary">' . esc_html__('Open Tracking Page', 'shipkia-connect') . ' ↗</a>';
         } else {
-            echo '<span class="description">' . (function_exists('__') ? __('No tracking URL available', 'shipkia-shipment-tracking') : 'No tracking URL available') . '</span>';
+            echo '<span class="description">' . esc_html__('No tracking URL available', 'shipkia-connect') . '</span>';
         }
         echo '</p>';
 
         echo '</div>'; // End second shipkia-admin-row
-
         echo '</div>'; // End shipkia_tracking_fields
     }
 
@@ -162,7 +156,7 @@ class Shipkia_Tracking_Meta
     public function add_tracking_column($columns)
     {
         $new_columns = array();
-        $tracking_label = function_exists('__') ? __('Shipment Status', 'shipkia-shipment-tracking') : 'Shipment Status';
+        $tracking_label = function_exists('__') ? __('Shipment Status', 'shipkia-connect') : 'Shipment Status';
 
         foreach ($columns as $key => $column) {
             $new_columns[$key] = $column;
@@ -201,16 +195,8 @@ class Shipkia_Tracking_Meta
         }
     }
 
-    /**
-     * Get Column Content Helper
-     */
     private function render_column_content($order_id)
     {
-        if (!function_exists('wc_get_order')) {
-            echo '<span class="na">&ndash;</span>';
-            return;
-        }
-
         $order = wc_get_order($order_id);
         if (!$order) {
             echo '<span class="na">&ndash;</span>';
@@ -222,18 +208,18 @@ class Shipkia_Tracking_Meta
         $url = $order->get_meta('_shipkia_tracking_url', true);
 
         if (!empty($status)) {
-            echo '<strong>' . (function_exists('esc_html') ? esc_html($status) : $status) . '</strong>';
+            echo '<strong>' . esc_html($status) . '</strong>';
             if (!empty($awb)) {
-                echo '<br><small class="meta">' . (function_exists('esc_html') ? esc_html($awb) : $awb) . '</small>';
+                echo '<br><small class="meta">' . esc_html($awb) . '</small>';
             }
         } elseif (!empty($awb)) {
-            echo (function_exists('esc_html') ? esc_html($awb) : $awb);
+            echo esc_html($awb);
         } else {
             echo '<span class="na">&ndash;</span>';
         }
 
         if (!empty($url)) {
-            echo '<br><a href="' . (function_exists('esc_url') ? esc_url($url) : $url) . '" target="_blank" class="button button-small shipkia-track-btn">' . (function_exists('__') ? __('Track', 'shipkia-shipment-tracking') : 'Track') . '</a>';
+            echo '<br><a href="' . esc_url($url) . '" target="_blank" class="button button-small shipkia-track-btn">' . esc_html__('Track', 'shipkia-connect') . '</a>';
         }
     }
 }

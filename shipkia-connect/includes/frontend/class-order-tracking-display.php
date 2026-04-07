@@ -40,14 +40,15 @@ class Shipkia_Order_Tracking_Display
             echo '<div class="shipkia-tracking-status">';
             if (!empty($status)) {
                 echo '<p class="shipkia-tracking-status-text">';
-                echo '<strong>' . (function_exists('__') ? __('Tracking Status', 'shipkia-shipment-tracking') : 'Tracking Status') . ':</strong> ';
-                echo '<span>' . (function_exists('esc_html') ? esc_html($status) : $status) . '</span>';
+                echo '<strong>' . esc_html__('Tracking Status', 'shipkia-connect') . ':</strong> ';
+                echo '<span>' . esc_html($status) . '</span>';
                 echo '</p>';
             }
 
             echo '<p class="shipkia-track-btn-wrapper">';
-            echo '<a href="' . (function_exists('esc_url') ? esc_url($url) : $url) . '" target="' . (function_exists('esc_attr') ? esc_attr($target) : $target) . '" class="button shipkia-track-link">' . (function_exists('esc_html') ? esc_html($text) : $text) . '</a>';
+            echo '<a href="' . esc_url($url) . '" target="' . esc_attr($target) . '" class="button shipkia-track-link">' . esc_html($text) . '</a>';
             echo '</p>';
+            echo '</div>';
         }
     }
 }

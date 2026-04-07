@@ -131,7 +131,7 @@ class Shipkia_Logger
      */
     private function get_domain()
     {
-        return parse_url(get_site_url(), PHP_URL_HOST);
+        return wp_parse_url(get_site_url(), PHP_URL_HOST);
     }
     
     /**

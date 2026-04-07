@@ -65,7 +65,7 @@ class Shipkia_Helpers
             return 'Track';
         }
 
-        $default_text = function_exists('__') ? __('Track', 'shipkia-shipment-tracking') : 'Track';
+        $default_text = function_exists('__') ? __('Track', 'shipkia-connect') : 'Track';
         $text = get_option('shipkia_tracking_button_text', $default_text);
         return !empty($text) ? $text : $default_text;
     }
@@ -93,7 +93,7 @@ class Shipkia_Helpers
  * @param array $context
  * @param string $source
  */
-function shipkia_log($message, $level = 'info', $context = array(), $source = 'shipkia-connection')
+function shipkia_tracking_log($message, $level = 'info', $context = array(), $source = 'shipkia-connection')
 {
     if (class_exists('Shipkia_Logger')) {
         Shipkia_Logger::add($message, $level, $context, $source);
