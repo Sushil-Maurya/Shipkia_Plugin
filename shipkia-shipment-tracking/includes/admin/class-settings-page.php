@@ -521,23 +521,28 @@ class Shipkia_Settings_Page
                 });
 
                 $('#shipkia-reconnect-btn').on('click', function () {
+                    if (!confirm('You will be redirected to the Shipkia platform to renew your store connection. Proceed?')) {
+                        return;
+                    }
+
                     var $btn = $(this);
-                    $btn.prop('disabled', true).text('Reconnecting...');
+                    $btn.prop('disabled', true).text('Redirecting...');
                     $('#shipkia-connection-message').html('');
 
                     $.post(ajaxurl, {
-                        action: 'shipkia_reconnect_platform',
+                        action: 'shipkia_get_auth_url',
                         nonce: '<?php echo function_exists('wp_create_nonce') ? wp_create_nonce("shipkia_connection_nonce") : ""; ?>'
                     }, function (response) {
-                        if (response.success) {
-                            $('#shipkia-connection-message').html('<div class="notice notice-success inline"><p>' + response.data.message + '</p></div>');
-                            setTimeout(function () { location.reload(); }, 1500);
+                        if (response.success && response.data.auth_url) {
+                            window.open(response.data.auth_url, '_blank');
+                            $btn.prop('disabled', false).text('Reconnect');
+                            $('#shipkia-connection-message').html('<div class="notice notice-info inline"><p>Authorization opened in a new tab. Please complete it and then refresh this page to see the updated status.</p></div>');
                         } else {
-                            $('#shipkia-connection-message').html('<div class="notice notice-error inline"><p>' + (response.data.message || 'Reconnection failed') + '</p></div>');
+                            alert(response.data.message || 'Failed to initiate reconnection.');
                             $btn.prop('disabled', false).text('Reconnect');
                         }
                     }).fail(function () {
-                        $('#shipkia-connection-message').html('<div class="notice notice-error inline"><p>Network error. Please try again.</p></div>');
+                        alert('Network error. Please try again.');
                         $btn.prop('disabled', false).text('Reconnect');
                     });
                 });

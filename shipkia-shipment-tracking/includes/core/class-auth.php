@@ -82,6 +82,9 @@ class Shipkia_Auth
             } else {
                 update_option('shipkia_api_connected', false);
                 update_option('shipkia_webhooks_active', false);
+                // Clear tokens for security and to force renewal on reconnect
+                delete_option('shipkia_api_key');
+                delete_option('shipkia_api_secret');
             }
             if (function_exists('set_transient')) {
                 set_transient('shipkia_connection_verified', true, (defined('HOUR_IN_SECONDS') ? HOUR_IN_SECONDS : 3600));
@@ -1072,7 +1075,7 @@ class Shipkia_Auth
         // If we have a store_id, we want to return back to the Shipkia Integrations page 
         // with the sync_shop param to trigger the initial sync dialog.
         if ($store_id) {
-            $return_url = $app_url . '/integrations?sync_shop=' . urlencode($store_id);
+            $return_url = $app_url . '/integrations?sync_shop=' . rawurlencode($store_id);
         }
 
         $auth_url = $app_url . '/api/method/bu_ecommerce_integrations.api.woocommerce.connection.get_auth_url';
