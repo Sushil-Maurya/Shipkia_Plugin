@@ -1,14 +1,13 @@
 <?php
 /*
-Plugin Name: Shipkia Shipment Tracking for WooCommerce
-Plugin URI:  https://shipkia.com/
+Plugin Name: Shipkia Connect
 Description: Adds Shipkia tracking number to WooCommerce Orders and displays on Tracking page.
 Version:     1.0.0
 Author:      Shipkia
 Author URI:  https://shipkia.com/
 License:     GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
-Text Domain: shipkia-shipment-tracking
+Text Domain: shipkia-connect
 Domain Path: /languages
 */
 
@@ -99,7 +98,7 @@ class Shipkia_Shipment_Tracking
         if (function_exists('add_action')) {
             add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
             add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
-            
+
             // Add REST API routes
             if (class_exists('Shipkia_Auth')) {
                 add_action('rest_api_init', array('Shipkia_Auth', 'register_rest_routes'));
@@ -139,7 +138,7 @@ class Shipkia_Shipment_Tracking
         if (function_exists('wp_enqueue_script')) {
             wp_enqueue_script('shipkia-admin-js', SHIPKIA_Tracking_URL . 'assets/js/admin.js', array('jquery'), SHIPKIA_Tracking_VERSION, true);
         }
-        
+
         // Localize script for AJAX
         if (function_exists('wp_localize_script')) {
             wp_localize_script('shipkia-admin-js', 'shipkiaAdmin', array(
