@@ -1,4 +1,4 @@
-=== Shipkia Shipment Tracking for WooCommerce ===
+=== Shipkia Connect ===
 Contributors: shipkia
 Tags: woocommerce, shipping, tracking, shipment tracking, shipkia
 Requires at least: 5.0
@@ -12,7 +12,7 @@ Connect your WooCommerce store to the Shipkia platform to automatically sync shi
 
 == Description ==
 
-Shipkia Shipment Tracking for WooCommerce allows you to seamlessly integrate your online store with the Shipkia platform. 
+Shipkia Connect allows you to seamlessly integrate your online store with the Shipkia platform. 
 
 Key features include:
 * Automatic shipment tracking synchronization.
