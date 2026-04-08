@@ -65,7 +65,7 @@ class Shipkia_Auth
     {
         $params = $request->get_json_params();
         $passed_secret = isset($params['secret']) ? $params['secret'] : '';
-        
+
         $expected_secret = self::get_plugin_secret();
         $consumer_secret = self::get_woocommerce_consumer_secret();
 
@@ -73,7 +73,8 @@ class Shipkia_Auth
         $authorized = false;
         if (!empty($expected_secret) && hash_equals($expected_secret, $passed_secret)) {
             $authorized = true;
-        } elseif (!empty($consumer_secret) && hash_equals($consumer_secret, $passed_secret)) {
+        }
+        elseif (!empty($consumer_secret) && hash_equals($consumer_secret, $passed_secret)) {
             $authorized = true;
         }
 
@@ -81,7 +82,8 @@ class Shipkia_Auth
         if (!$authorized) {
             if (!empty($expected_secret) && $passed_secret === $expected_secret) {
                 $authorized = true;
-            } elseif (!empty($consumer_secret) && $passed_secret === $consumer_secret) {
+            }
+            elseif (!empty($consumer_secret) && $passed_secret === $consumer_secret) {
                 $authorized = true;
             }
         }
@@ -90,7 +92,7 @@ class Shipkia_Auth
             return new WP_Error('unauthorized', 'Invalid secret', array('status' => 401));
         }
 
-        $is_active = isset($params['is_active']) ? (bool) $params['is_active'] : false;
+        $is_active = isset($params['is_active']) ? (bool)$params['is_active'] : false;
 
         if (function_exists('update_option')) {
             update_option('shipkia_is_active', $is_active);
@@ -98,7 +100,8 @@ class Shipkia_Auth
                 // If activated from backend, ensure webhooks and api connected status are true
                 update_option('shipkia_api_connected', true);
                 update_option('shipkia_webhooks_active', true);
-            } else {
+            }
+            else {
                 update_option('shipkia_api_connected', false);
                 update_option('shipkia_webhooks_active', false);
             }
@@ -167,7 +170,7 @@ class Shipkia_Auth
         $is_settings_page = ($screen && $screen->id === 'toplevel_page_shipkia-connect');
 
         // If connected and active, we periodically verify the connection status
-        $is_active = function_exists('get_option') ? (bool) get_option('shipkia_is_active', false) : false;
+        $is_active = function_exists('get_option') ? (bool)get_option('shipkia_is_active', false) : false;
         if (self::is_connected() && $is_active) {
             // Verify every 12 hours, or every 1 minute if on settings page
             $verify_interval = $is_settings_page ? 60 : (12 * (defined('HOUR_IN_SECONDS') ? HOUR_IN_SECONDS : 3600));
@@ -281,7 +284,8 @@ class Shipkia_Auth
 
             return array('success' => false, 'message' => isset($data['message']) ? $data['message'] : 'Could not establish connection automatically.');
 
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
             self::log('Shipkia auto-sync exception: ' . $e->getMessage(), 'error');
             return array('success' => false, 'message' => $e->getMessage());
         }
@@ -345,7 +349,7 @@ class Shipkia_Auth
             isset($data['created_from']) ? $data['created_from'] : 'Plugin',
             isset($data['access_token']) ? $data['access_token'] : null,
             isset($data['refresh_token']) ? $data['refresh_token'] : null,
-            isset($data['initial_sync_done']) ? (bool) $data['initial_sync_done'] : false
+            isset($data['initial_sync_done']) ? (bool)$data['initial_sync_done'] : false
         );
         self::log('Shipkia: Store connection established/updated.');
     }
@@ -385,7 +389,8 @@ class Shipkia_Auth
                 'success' => true,
                 'message' => function_exists('__') ? __('Sync successful! Connection and data updated.', 'shipkia-connect') : 'Sync successful! Connection and data updated.'
             );
-        } else {
+        }
+        else {
             $response = array(
                 'success' => false,
                 'message' => isset($result['message']) ? $result['message'] : (function_exists('__') ? __('Sync failed.', 'shipkia-connect') : 'Sync failed.')
@@ -423,7 +428,8 @@ class Shipkia_Auth
             // Trigger registration
             return self::manual_sync(true);
 
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
             return array('success' => false, 'message' => $e->getMessage());
         }
     }
@@ -475,7 +481,8 @@ class Shipkia_Auth
                 'success' => true,
                 'message' => function_exists('__') ? __('Store marked as Inactive.', 'shipkia-connect') : 'Store marked as Inactive.'
             );
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
             update_option('shipkia_is_active', false);
             return array('success' => false, 'message' => $e->getMessage());
         }
@@ -500,15 +507,8 @@ class Shipkia_Auth
                 $domain = self::get_store_domain();
                 $keys = null;
 
-                // Try to use cached WooCommerce consumer keys if available
-                $cached_key = function_exists('get_option') ? get_option('shipkia_consumer_key_plaintext') : null;
-                $cached_secret = function_exists('get_option') ? get_option('shipkia_consumer_secret_plaintext') : null;
-                if ($cached_key && $cached_secret) {
-                    $keys = array(
-                        'consumer_key' => $cached_key,
-                        'consumer_secret' => $cached_secret
-                    );
-                }
+                // Ensure we have valid REST API keys (regeneate if missing or stale)
+                $keys = self::ensure_rest_api_keys();
 
                 // create_new=true tells the backend to set is_active=1 (should_activate = True)
                 $data = self::send_auto_sync_request($domain, $api_url, $keys, true);
@@ -542,10 +542,18 @@ class Shipkia_Auth
             }
 
             if (function_exists('wp_remote_post')) {
+                // Ensure WooCommerce REST keys are valid and included in reactivation
+                $keys = self::ensure_rest_api_keys();
+                $body_args = array('store_id' => $store_id);
+                if ($keys) {
+                    $body_args['consumer_key'] = $keys['consumer_key'];
+                    $body_args['consumer_secret'] = $keys['consumer_secret'];
+                }
+
                 $response = wp_remote_post($api_url . '/api/method/bu_ecommerce_integrations.api.woocommerce.plugin_auth.reactivate_store', array(
                     'timeout' => 15,
                     'headers' => $headers,
-                    'body' => array('store_id' => $store_id)
+                    'body' => $body_args
                 ));
 
                 if (function_exists('is_wp_error') && is_wp_error($response)) {
@@ -553,7 +561,8 @@ class Shipkia_Auth
                 }
 
                 $body = json_decode(function_exists('wp_remote_retrieve_body') ? wp_remote_retrieve_body($response) : '', true);
-            } else {
+            }
+            else {
                 return array('success' => false, 'message' => 'wp_remote_post is not available');
             }
 
@@ -594,7 +603,8 @@ class Shipkia_Auth
 
             self::log("Reconnect: Unexpected response format: " . (is_array($body) ? json_encode($body) : $body), "warning");
             return array('success' => false, 'message' => function_exists('__') ? __('Reconnection failed. Unexpected response.', 'shipkia-connect') : 'Reconnection failed. Unexpected response.');
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
             return array('success' => false, 'message' => $e->getMessage());
         }
     }
@@ -635,7 +645,8 @@ class Shipkia_Auth
             }
 
             return true;
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
             return false;
         }
     }
@@ -688,7 +699,8 @@ class Shipkia_Auth
 
             if ($domain) {
                 update_option('shipkia_connected_domain', $domain);
-            } else {
+            }
+            else {
                 update_option('shipkia_connected_domain', self::get_store_domain());
             }
         }
@@ -731,7 +743,8 @@ class Shipkia_Auth
                 'success' => true,
                 'message' => __('Store removed successfully.', 'shipkia-connect')
             );
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) {
             self::disconnect_locally();
             return array(
                 'success' => false,
@@ -752,7 +765,7 @@ class Shipkia_Auth
             $message .= ':' . $timestamp;
         }
 
-        return hash_hmac('sha256', $message, $secret);
+        return hash_hmac('sha256', $message, $secret, true);
     }
 
     /**
@@ -877,14 +890,17 @@ class Shipkia_Auth
                     'consumer_key' => $cached_key,
                     'consumer_secret' => $cached_secret
                 );
-            } else {
+            }
+            else {
                 self::log('Ensure keys: Cache invalid/stale. Clearing.');
                 // Cache is stale
                 delete_option('shipkia_consumer_key_plaintext');
                 delete_option('shipkia_consumer_secret_plaintext');
                 delete_option('shipkia_key_id');
+                wp_cache_delete('wc_consumer_secret', 'shipkia_auth');
             }
-        } else {
+        }
+        else {
             self::log('Ensure keys: No complete cache found.');
         }
 
@@ -919,15 +935,14 @@ class Shipkia_Auth
         $result = $wpdb->insert(
             $table_name,
             array(
-                'user_id' => $user_id,
-                'description' => 'ShipKia Integration - API (' . $ist_time . ')',
-                'permissions' => 'read_write',
-                'consumer_key' => $consumer_key_hash,
-                'consumer_secret' => $consumer_secret,
-                'truncated_key' => substr($consumer_key, -7),
-                'last_access' => null
-            ),
-            array('%d', '%s', '%s', '%s', '%s', '%s', '%s')
+            'user_id' => $user_id,
+            'description' => 'ShipKia Integration - Autogenerated (' . $ist_time . ')',
+            'permissions' => 'read_write',
+            'consumer_key' => $consumer_key_hash,
+            'consumer_secret' => $consumer_secret,
+            'truncated_key' => substr($consumer_key, -7)
+        ),
+            array('%d', '%s', '%s', '%s', '%s', '%s')
         );
 
         if ($result) {
@@ -938,6 +953,7 @@ class Shipkia_Auth
             update_option('shipkia_consumer_key_plaintext', $consumer_key);
             update_option('shipkia_consumer_secret_plaintext', $consumer_secret);
             update_option('shipkia_key_id', $new_key_id);
+            wp_cache_delete('wc_consumer_secret', 'shipkia_auth');
 
             self::log('Shipkia: Generated new REST API keys');
             return array(
@@ -1039,7 +1055,7 @@ class Shipkia_Auth
      */
     public static function is_connected()
     {
-        return (bool) get_option('shipkia_connected', false);
+        return (bool)get_option('shipkia_connected', false);
     }
 
     /**
@@ -1071,8 +1087,8 @@ class Shipkia_Auth
         $api_key = get_option('shipkia_api_key');
         $token_valid = !empty($api_key);
 
-        $api_connected = (bool) get_option('shipkia_api_connected', false);
-        $webhooks_active = (bool) get_option('shipkia_webhooks_active', false);
+        $api_connected = (bool)get_option('shipkia_api_connected', false);
+        $webhooks_active = (bool)get_option('shipkia_webhooks_active', false);
         $created_from = get_option('shipkia_created_from', 'Platform');
 
         return array(
@@ -1086,8 +1102,8 @@ class Shipkia_Auth
             'token_expires_at' => null,
             'api_connected' => $api_connected,
             'webhooks_active' => $webhooks_active,
-            'is_active' => (bool) get_option('shipkia_is_active', false),
-            'initial_sync_done' => (bool) get_option('shipkia_initial_sync_done', false),
+            'is_active' => (bool)get_option('shipkia_is_active', false),
+            'initial_sync_done' => (bool)get_option('shipkia_initial_sync_done', false),
             'created_from' => $created_from
         );
     }
