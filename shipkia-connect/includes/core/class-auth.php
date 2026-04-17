@@ -758,14 +758,14 @@ class Shipkia_Auth
      */
     private static function generate_signature($domain, $timestamp = null)
     {
-        $secret = self::get_plugin_secret();
+        $secret = (string) self::get_plugin_secret();
         $message = self::normalize_domain($domain);
 
         if ($timestamp) {
             $message .= ':' . $timestamp;
         }
 
-        return hash_hmac('sha256', $message, $secret, true);
+        return hash_hmac('sha256', $message, $secret ?: '', true);
     }
 
     /**
@@ -968,6 +968,7 @@ class Shipkia_Auth
 
     /**
      * Get plugin secret
+     * @return string
      */
     private static function get_plugin_secret()
     {
