@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Shipkia Logger Class
+ * ShipKia Logger Class
  * 
  * Handles enterprise-grade logging using native WC_Logger.
  * Supports multiple sources, masking of sensitive data, and context injection.

@@ -49,9 +49,9 @@ jQuery(document).ready(function($) {
         }, 2000);
     }
 
-    // ==================== Shipkia Connection Handlers ====================
+    // ==================== ShipKia Connection Handlers ====================
 
-    // Connect to Shipkia
+    // Connect to ShipKia
     $(document).on('click', '#shipkia-connect-btn', function(e) {
         e.preventDefault();
         
@@ -62,7 +62,7 @@ jQuery(document).ready(function($) {
         
         // Validate URL
         if (!appUrl) {
-            showConnectionMessage('Please enter a Shipkia URL', 'error');
+            showConnectionMessage('Please enter a ShipKia URL', 'error');
             return;
         }
         
@@ -74,7 +74,7 @@ jQuery(document).ready(function($) {
         // Disable controls and show loading state
         $btn.prop('disabled', true).text('Connecting...');
         $input.prop('readonly', true).css('opacity', '0.6');
-        $message.html('<p style="color: #0073aa;">Please wait, connecting to Shipkia...</p>');
+        $message.html('<p style="color: #0073aa;">Please wait, connecting to ShipKia...</p>');
         
         // Make AJAX request
         $.ajax({
@@ -98,7 +98,7 @@ jQuery(document).ready(function($) {
                     var errorMsg = response.data && response.data.message ? response.data.message : 'Connection failed. Please check the URL and try again.';
                     showConnectionMessage(errorMsg, 'error');
                     // Re-enable controls on failure
-                    $btn.prop('disabled', false).text('Connect to Shipkia');
+                    $btn.prop('disabled', false).text('Connect to ShipKia');
                     $input.prop('readonly', false).css('opacity', '1');
                 }
             },
@@ -114,7 +114,7 @@ jQuery(document).ready(function($) {
         });
     });
 
-    // Sync with Shipkia
+    // Sync with ShipKia
     $(document).on('click', '#shipkia-sync-btn', function(e) {
         e.preventDefault();
         
@@ -147,7 +147,7 @@ jQuery(document).ready(function($) {
                     } else {
                         // Check for store not found special case
                         if (response.data.store_not_found) {
-                            if (confirm('No existing Shipkia store found for this URL. Do you want to create a new store?')) {
+                            if (confirm('No existing ShipKia store found for this URL. Do you want to create a new store?')) {
                                 performSync(true); // Retry with creation enabled
                             } else {
                                 // User denied creation of missing store, so disconnect locally to match backend state
@@ -181,14 +181,14 @@ jQuery(document).ready(function($) {
         performSync(false);
     });
 
-    // Disconnect from Shipkia
+    // Disconnect from ShipKia
     $(document).on('click', '#shipkia-disconnect-btn', function(e) {
         e.preventDefault();
         
         var $btn = $(this);
         var $message = $('#shipkia-connection-message');
         
-        if (!confirm('Are you sure you want to disconnect from Shipkia? This will clear all connection settings.')) {
+        if (!confirm('Are you sure you want to disconnect from ShipKia? This will clear all connection settings.')) {
             return;
         }
         

@@ -59,10 +59,10 @@ class Shipkia_Settings_Page
         register_setting('shipkia_settings_group', 'shipkia_multisite_sites', array('Shipkia_Settings_Page', 'sanitize_multisite_sites'));
 
         if (function_exists('add_settings_section')) {
-            // Shipkia Platform Connection Section
+            // ShipKia Platform Connection Section
             add_settings_section(
                 'shipkia_connection_section',
-                (function_exists('__') ? __('Shipkia Platform Connection', 'shipkia-connect') : 'Shipkia Platform Connection'),
+                (function_exists('__') ? __('ShipKia Platform Connection', 'shipkia-connect') : 'ShipKia Platform Connection'),
                 array('Shipkia_Settings_Page', 'render_connection_section_description'),
                 'shipkia-connect'
             );
@@ -87,7 +87,7 @@ class Shipkia_Settings_Page
 
             add_settings_field(
                 'shipkia_app_url',
-                (function_exists('__') ? __('Shipkia App URL', 'shipkia-connect') : 'Shipkia App URL'),
+                (function_exists('__') ? __('ShipKia App URL', 'shipkia-connect') : 'ShipKia App URL'),
                 array('Shipkia_Settings_Page', 'render_app_url_field'),
                 'shipkia-connect',
                 'shipkia_connection_section'
@@ -134,7 +134,7 @@ class Shipkia_Settings_Page
         $val = function_exists('get_option') ? get_option('shipkia_tracking_enabled', 'yes') : 'yes';
         ?>
         <label><input type="checkbox" name="shipkia_tracking_enabled" value="yes" <?php checked($val, 'yes'); ?> />
-            <?php esc_html_e('Enable Shipkia Connect', 'shipkia-connect'); ?>
+            <?php esc_html_e('Enable ShipKia Connect', 'shipkia-connect'); ?>
         </label>
         <?php
     }
@@ -186,17 +186,17 @@ class Shipkia_Settings_Page
             <?php endforeach; ?>
         </div>
         <p class="description">
-            <?php esc_html_e('Select the sites you want to connect to Shipkia.', 'shipkia-connect'); ?>
+            <?php esc_html_e('Select the sites you want to connect to ShipKia.', 'shipkia-connect'); ?>
         </p>
         <?php
     }
 
-    // ==================== Shipkia Connection Fields ====================
+    // ==================== ShipKia Connection Fields ====================
 
     public static function render_connection_section_description()
     {
         ?>
-        <p><?php esc_html_e('Connect your WooCommerce store to the Shipkia platform for advanced shipment tracking and management.', 'shipkia-connect'); ?>
+        <p><?php esc_html_e('Connect your WooCommerce store to the ShipKia platform for advanced shipment tracking and management.', 'shipkia-connect'); ?>
         </p>
         <?php
     }
@@ -221,7 +221,7 @@ class Shipkia_Settings_Page
                     <h3 style="margin-top: 0; color: #2271b1;">🚀
                         <?php esc_html_e('Ready to Connect!', 'shipkia-connect'); ?>
                     </h3>
-                    <p><?php esc_html_e('Shipkia Connect plugin has been activated. Please initialize the connection to start syncing your orders and products.', 'shipkia-connect'); ?>
+                    <p><?php esc_html_e('ShipKia Connect plugin has been activated. Please initialize the connection to start syncing your orders and products.', 'shipkia-connect'); ?>
                     </p>
                     <button type="button" id="shipkia-initialize-btn" class="button button-primary button-large"
                         style="margin-top: 10px;">
@@ -247,8 +247,8 @@ class Shipkia_Settings_Page
                                         setTimeout(function () { location.reload(); }, 1500);
                                     } else {
                                         if (!createNew && response.data && response.data.status === 'not_found') {
-                                            // Store not found on Shipkia - ask user to create new
-                                            if (confirm(response.data.message || '<?php echo esc_js(__('Store not found on Shipkia. Create a new connection?', 'shipkia-connect')); ?>')) {
+                                            // Store not found on ShipKia - ask user to create new
+                                            if (confirm(response.data.message || '<?php echo esc_js(__('Store not found on ShipKia. Create a new connection?', 'shipkia-connect')); ?>')) {
                                                 performInit(true);
                                                 return;
                                             }
@@ -290,7 +290,7 @@ class Shipkia_Settings_Page
                         <?php endif; ?>
                         <?php if ($status['shipkia_url']): ?>
                             <tr>
-                                <td style="padding: 5px 0;"><strong>Shipkia URL:</strong></td>
+                                <td style="padding: 5px 0;"><strong>ShipKia URL:</strong></td>
                                 <td style="padding: 5px 0;">
                                     <a href="<?php echo esc_url($status['shipkia_url']); ?>"
                                         target="_blank" style="text-decoration: none;">
@@ -334,7 +334,7 @@ class Shipkia_Settings_Page
                         <div style="background: #fff; border: 1px solid #f39c12; padding: 10px; margin-top: 15px;">
                             <p style="margin: 0 0 10px 0; color: #e67e22;">
                                 <strong>Complete your setup!</strong><br>
-                                The plugin is connected, but the Shipkia Platform needs permission to sync orders.
+                                The plugin is connected, but the ShipKia Platform needs permission to sync orders.
                             </p>
                             <button type="button" id="shipkia-connect-platform-btn" class="button button-primary">
                                 Connect Platform API
@@ -357,7 +357,7 @@ class Shipkia_Settings_Page
                                     id="shipkia-sync-order-product-link" target="_blank" class="button button-secondary">
                                     <span class="dashicons dashicons-cloud-upload"
                                         style="font-size: 16px; vertical-align: middle; line-height: 28px;"></span>
-                                    Sync to Shipkia
+                                    Sync to ShipKia
                                 </a>
                             <?php endif; ?>
                             <button type="button" id="shipkia-disconnect-btn" class="button button-secondary">
@@ -396,7 +396,7 @@ class Shipkia_Settings_Page
             jQuery(document).ready(function ($) {
                 // Function to handle getting platform auth URL
                 $('#shipkia-connect-platform-btn').on('click', function () {
-                    if (!confirm('You are about to be redirected to the Shipkia platform/WooCommerce authorization page to grant permissions. Do you want to proceed?')) {
+                    if (!confirm('You are about to be redirected to the ShipKia platform/WooCommerce authorization page to grant permissions. Do you want to proceed?')) {
                         return;
                     }
 
@@ -551,10 +551,10 @@ class Shipkia_Settings_Page
 
             <?php if (!$is_connected): ?>
                 <p class="description">
-                    <?php esc_html_e('Enter your Shipkia platform URL (e.g., https://app.shipkia.com)', 'shipkia-connect'); ?>
+                    <?php esc_html_e('Enter your ShipKia platform URL (e.g., https://app.shipkia.com)', 'shipkia-connect'); ?>
                 </p>
                 <button type="button" id="shipkia-connect-btn" class="button button-primary" style="margin-top: 10px;">
-                    <?php esc_html_e('Connect to Shipkia', 'shipkia-connect'); ?>
+                    <?php esc_html_e('Connect to ShipKia', 'shipkia-connect'); ?>
                 </button>
 
                 <script>
@@ -562,7 +562,7 @@ class Shipkia_Settings_Page
                         $('#shipkia-connect-btn').on('click', function () {
                             var appUrl = $('#shipkia_app_url').val();
                             if (!appUrl) {
-                                alert('Please enter Shipkia URL');
+                                alert('Please enter ShipKia URL');
                                 return;
                             }
 
@@ -580,7 +580,7 @@ class Shipkia_Settings_Page
                                     setTimeout(function () { location.reload(); }, 1500);
                                 } else {
                                     $('#shipkia-connection-message').html('<div class="notice notice-error inline"><p>' + (response.data.message || 'Connection failed') + '</p></div>');
-                                    $btn.prop('disabled', false).text('<?php esc_attr_e('Connect to Shipkia', 'shipkia-connect'); ?>');
+                                    $btn.prop('disabled', false).text('<?php esc_attr_e('Connect to ShipKia', 'shipkia-connect'); ?>');
                                 }
                             });
                         });
@@ -588,7 +588,7 @@ class Shipkia_Settings_Page
                 </script>
             <?php else: ?>
                 <p class="description">
-                    <?php esc_html_e('Disconnect above to change the Shipkia URL', 'shipkia-connect'); ?>
+                    <?php esc_html_e('Disconnect above to change the ShipKia URL', 'shipkia-connect'); ?>
                 </p>
             <?php endif; ?>
         </div>
@@ -693,7 +693,7 @@ class Shipkia_Settings_Page
         $app_url = filter_input(INPUT_POST, 'app_url', FILTER_SANITIZE_URL);
 
         if (empty($app_url)) {
-            wp_send_json_error(array('message' => __('Shipkia URL is required', 'shipkia-connect')));
+            wp_send_json_error(array('message' => __('ShipKia URL is required', 'shipkia-connect')));
             return;
         }
 

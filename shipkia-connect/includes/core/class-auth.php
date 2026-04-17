@@ -5,9 +5,9 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Shipkia Authentication Class
+ * ShipKia Authentication Class
  * 
- * Handles connection to Shipkia platform including:
+ * Handles connection to ShipKia platform including:
  * - Auto-connect detection for existing stores
  * - Manual connection flow
  * - Token exchange and refresh
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 class Shipkia_Auth
 {
     /**
-     * Shipkia API base URL
+     * ShipKia API base URL
      */
     private static $api_base_url = null;
 
@@ -59,7 +59,7 @@ class Shipkia_Auth
     }
 
     /**
-     * Handle incoming status updates from Shipkia ERP
+     * Handle incoming status updates from ShipKia ERP
      */
     public static function handle_status_update($request)
     {
@@ -286,7 +286,7 @@ class Shipkia_Auth
 
         }
         catch (Exception $e) {
-            self::log('Shipkia auto-sync exception: ' . $e->getMessage(), 'error');
+            self::log('ShipKia auto-sync exception: ' . $e->getMessage(), 'error');
             return array('success' => false, 'message' => $e->getMessage());
         }
     }
@@ -351,15 +351,15 @@ class Shipkia_Auth
             isset($data['refresh_token']) ? $data['refresh_token'] : null,
             isset($data['initial_sync_done']) ? (bool)$data['initial_sync_done'] : false
         );
-        self::log('Shipkia: Store connection established/updated.');
+        self::log('ShipKia: Store connection established/updated.');
     }
 
 
     /**
-     * Attempt to auto-connect to Shipkia platform
+     * Attempt to auto-connect to ShipKia platform
      */
     /**
-     * Attempt to auto-connect to Shipkia platform
+     * Attempt to auto-connect to ShipKia platform
      */
     private static function attempt_auto_connect()
     {
@@ -372,7 +372,7 @@ class Shipkia_Auth
      */
     public static function manual_sync($create_new = false)
     {
-        self::log('Shipkia: Manual sync triggered from UI (Create new: ' . ($create_new ? 'Yes' : 'No') . ')');
+        self::log('ShipKia: Manual sync triggered from UI (Create new: ' . ($create_new ? 'Yes' : 'No') . ')');
 
         // Attempt auto-sync (this will register or update store and get new tokens)
         $result = self::auto_sync_on_activate($create_new);
@@ -405,14 +405,14 @@ class Shipkia_Auth
     }
 
     /**
-     * Manual connection to Shipkia platform (Triggers Auto-Sync)
+     * Manual connection to ShipKia platform (Triggers Auto-Sync)
      */
     public static function manual_connect($app_url, $api_key = null, $api_secret = null)
     {
         try {
             // Validate URL
             if (!filter_var($app_url, FILTER_VALIDATE_URL)) {
-                return array('success' => false, 'message' => __('Invalid Shipkia URL', 'shipkia-connect'));
+                return array('success' => false, 'message' => __('Invalid ShipKia URL', 'shipkia-connect'));
             }
 
             if (function_exists('update_option')) {
@@ -435,7 +435,7 @@ class Shipkia_Auth
     }
 
     /**
-     * Disconnect from Shipkia platform
+     * Disconnect from ShipKia platform
      */
     public static function disconnect()
     {
@@ -610,7 +610,7 @@ class Shipkia_Auth
     }
 
     /**
-     * Synchronize settings between plugin and Shipkia platform
+     * Synchronize settings between plugin and ShipKia platform
      */
     public static function sync_settings()
     {

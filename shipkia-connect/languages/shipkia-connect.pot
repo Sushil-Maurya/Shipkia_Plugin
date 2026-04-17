@@ -1,8 +1,8 @@
-# Copyright (C) 2026 Shipkia
-# This file is distributed under the same license as the Shipkia Connect plugin.
+# Copyright (C) 2026 ShipKia
+# This file is distributed under the same license as the ShipKia Connect plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: Shipkia Connect 1.0.0\n"
+"Project-Id-Version: ShipKia Connect 1.0.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/shipkia-connect\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"

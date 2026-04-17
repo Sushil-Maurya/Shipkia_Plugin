@@ -27,8 +27,8 @@ class Shipkia_Admin_Menu
     {
         // Top Level Menu
         add_menu_page(
-            __('Shipkia Connect', 'shipkia-connect'),
-            __('Shipkia Connect', 'shipkia-connect'),
+            __('ShipKia Connect', 'shipkia-connect'),
+            __('ShipKia Connect', 'shipkia-connect'),
             'manage_woocommerce',
             'shipkia-connect',
             array('Shipkia_Settings_Page', 'render'),

@@ -1,10 +1,10 @@
 <?php
 /*
-Plugin Name: Shipkia Connect
-Description: Adds Shipkia tracking number to WooCommerce Orders and displays on Tracking page.
+Plugin Name: ShipKia Connect
+Description: Adds ShipKia tracking number to WooCommerce Orders and displays on Tracking page.
 Version:     1.0.0
 Tested up to: 6.9
-Author:      Shipkia
+Author:      ShipKia
 Author URI:  https://shipkia.com/
 License:     GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html

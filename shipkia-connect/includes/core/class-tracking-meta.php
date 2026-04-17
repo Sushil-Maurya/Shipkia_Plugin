@@ -42,7 +42,7 @@ class Shipkia_Tracking_Meta
 
         add_meta_box(
             'shipkia_tracking_meta_box',
-            function_exists('__') ? __('Shipkia Connect', 'shipkia-connect') : 'Shipkia Connect',
+            function_exists('__') ? __('ShipKia Connect', 'shipkia-connect') : 'ShipKia Connect',
             array($this, 'render_tracking_meta_box'),
             'shop_order', // For legacy CPT
             'normal',
@@ -55,7 +55,7 @@ class Shipkia_Tracking_Meta
             if (function_exists('add_meta_box')) {
                 add_meta_box(
                     'shipkia_tracking_meta_box',
-                    function_exists('__') ? __('Shipkia Connect', 'shipkia-connect') : 'Shipkia Connect',
+                    function_exists('__') ? __('ShipKia Connect', 'shipkia-connect') : 'ShipKia Connect',
                     array($this, 'render_tracking_meta_box'),
                     $screen,
                     'normal',
@@ -125,11 +125,11 @@ class Shipkia_Tracking_Meta
         // Second Row for Order ID and Tracking URL
         echo '<div class="shipkia-admin-row" style="margin-top: 15px;">';
 
-        // Shipkia Order ID
+        // ShipKia Order ID
         if (function_exists('woocommerce_wp_text_input')) {
             woocommerce_wp_text_input(array(
                 'id' => 'shipkia_order_id_display',
-                'label' => esc_html__('Shipkia Order ID', 'shipkia-connect'),
+                'label' => esc_html__('ShipKia Order ID', 'shipkia-connect'),
                 'value' => $shipkia_order_id,
                 'custom_attributes' => array('readonly' => 'readonly', 'disabled' => 'disabled'),
                 'wrapper_class' => 'shipkia-col',
