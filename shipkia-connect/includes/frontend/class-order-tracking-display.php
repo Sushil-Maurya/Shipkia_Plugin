@@ -46,7 +46,7 @@ class Shipkia_Order_Tracking_Display
             }
 
             echo '<p class="shipkia-track-btn-wrapper">';
-            echo '<a href="' . esc_url($url) . '" target="' . esc_attr($target) . '" class="button shipkia-track-link">' . esc_html($text) . '</a>';
+            echo '<a href="' . esc_url($url) . '" target="' . esc_attr($target) . '" rel="noopener noreferrer" class="button shipkia-track-link">' . esc_html($text) . '</a>';
             echo '</p>';
             echo '</div>';
         }

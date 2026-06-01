@@ -15,7 +15,7 @@ class Shipkia_Orders_Tracking_Page
      */
     public static function render()
     {
-        if (!current_user_can('manage_options')) {
+        if (!current_user_can('manage_woocommerce') && !current_user_can('manage_options')) {
             return;
         }
         if (!function_exists('wc_get_orders')) {
@@ -79,7 +79,7 @@ class Shipkia_Orders_Tracking_Page
                                 <td><?php echo esc_html($status); ?></td>
                                 <td>
                                     <?php if (!empty($url)): ?>
-                                        <a href="<?php echo esc_url($url); ?>" target="_blank"
+                                        <a href="<?php echo esc_url($url); ?>" target="_blank" rel="noopener noreferrer"
                                            class="button button-small"><?php echo esc_html(Shipkia_Helpers::get_button_text()); ?></a>
                                     <?php endif; ?>
                                 </td>

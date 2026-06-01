@@ -9,6 +9,13 @@ if (!defined('ABSPATH')) {
  */
 class Shipkia_Settings_Page
 {
+    /**
+     * Check whether the current user can manage this plugin.
+     */
+    private static function current_user_can_manage_plugin()
+    {
+        return current_user_can('manage_woocommerce') || current_user_can('manage_options');
+    }
 
     /**
      * Render Settings Page
@@ -229,40 +236,6 @@ class Shipkia_Settings_Page
                     </button>
                     <div id="shipkia-init-message"></div>
                 </div>
-                <script>
-                    jQuery(document).ready(function ($) {
-                        $('#shipkia-initialize-btn').on('click', function () {
-                            var $btn = $(this);
-                            $btn.prop('disabled', true).text('<?php esc_attr_e('Initializing...', 'shipkia-connect'); ?>');
-                            $('#shipkia-init-message').html('');
-
-                            function performInit(createNew) {
-                                $.post(ajaxurl, {
-                                    action: 'shipkia_sync_platform',
-                                    create_new: createNew ? 1 : 0,
-                                    nonce: '<?php echo esc_attr(wp_create_nonce("shipkia_connection_nonce")); ?>'
-                                }, function (response) {
-                                    if (response.success) {
-                                        $('#shipkia-init-message').html('<div class="notice notice-success inline"><p>' + response.data.message + '</p></div>');
-                                        setTimeout(function () { location.reload(); }, 1500);
-                                    } else {
-                                        if (!createNew && response.data && response.data.status === 'not_found') {
-                                            // Store not found on ShipKia - ask user to create new
-                                            if (confirm(response.data.message || '<?php echo esc_js(__('Store not found on ShipKia. Create a new connection?', 'shipkia-connect')); ?>')) {
-                                                performInit(true);
-                                                return;
-                                            }
-                                        }
-                                        $('#shipkia-init-message').html('<div class="notice notice-error inline"><p>' + (response.data.message || 'Initialization failed') + '</p></div>');
-                                        $btn.prop('disabled', false).text('<?php esc_attr_e('Initialize Store Connection', 'shipkia-connect'); ?>');
-                                    }
-                                });
-                            }
-
-                            performInit(false); // Try discovery first, then create if not found
-                        });
-                    });
-                </script>
             <?php endif; ?>
 
             <div
@@ -293,7 +266,7 @@ class Shipkia_Settings_Page
                                 <td style="padding: 5px 0;"><strong>ShipKia URL:</strong></td>
                                 <td style="padding: 5px 0;">
                                     <a href="<?php echo esc_url($status['shipkia_url']); ?>"
-                                        target="_blank" style="text-decoration: none;">
+                                        target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
                                         <code
                                             style="color: #0073aa;"><?php echo esc_html($status['shipkia_url']); ?></code>
                                         <span class="dashicons dashicons-external"
@@ -354,7 +327,7 @@ class Shipkia_Settings_Page
                                 $sync_url = rtrim($app_url, '/') . '/integrations?sync_shop=' . urlencode($status['store_id']) . '&platform=woocommerce';
                                 ?>
                                 <a href="<?php echo esc_url($sync_url); ?>"
-                                    id="shipkia-sync-order-product-link" target="_blank" class="button button-secondary">
+                                    id="shipkia-sync-order-product-link" target="_blank" rel="noopener noreferrer" class="button button-secondary">
                                     <span class="dashicons dashicons-cloud-upload"
                                         style="font-size: 16px; vertical-align: middle; line-height: 28px;"></span>
                                     Sync to ShipKia
@@ -391,151 +364,6 @@ class Shipkia_Settings_Page
             </div>
         </div>
         <div id="shipkia-connection-message" style="margin-top: 10px;"></div>
-
-        <script type="text/javascript">
-            jQuery(document).ready(function ($) {
-                // Function to handle getting platform auth URL
-                $('#shipkia-connect-platform-btn').on('click', function () {
-                    if (!confirm('You are about to be redirected to the ShipKia platform/WooCommerce authorization page to grant permissions. Do you want to proceed?')) {
-                        return;
-                    }
-
-                    var $btn = $(this);
-                    $btn.prop('disabled', true).text('Redirecting...');
-
-                    $.post(ajaxurl, {
-                        action: 'shipkia_get_auth_url',
-                        nonce: '<?php echo esc_attr(wp_create_nonce("shipkia_connection_nonce")); ?>'
-                    }, function (response) {
-                        if (response.success && response.data.auth_url) {
-                            // Open in new tab as requested
-                            window.open(response.data.auth_url, '_blank');
-                            // Also update button to allow retry if needed
-                            $btn.prop('disabled', false).text('Connect Platform API');
-                            $('#shipkia-connection-message').html('<div class="notice notice-info inline"><p>Authorization opened in a new tab. Please complete it and then refresh this page.</p></div>');
-                        } else {
-                            alert(response.data.message || 'Failed to initiate platform connection.');
-                            $btn.prop('disabled', false).text('Connect Platform API');
-                        }
-                    }).fail(function () {
-                        alert('Network error. Please try again.');
-                        $btn.prop('disabled', false).text('Connect Platform API');
-                    });
-                });
-
-                // Existing handlers for sync/disconnect could be here or in main JS file
-                // Re-implementing simplified inline for robustness if main JS is missing logic
-                $('#shipkia-sync-btn').on('click', function () {
-                    var $btn = $(this);
-                    $btn.prop('disabled', true).text('Syncing...');
-                    $('#shipkia-connection-message').html('');
-
-                    function performSync(createNew) {
-                        $.post(ajaxurl, {
-                            action: 'shipkia_sync_platform',
-                            create_new: createNew ? 1 : 0,
-                            nonce: '<?php echo esc_attr(wp_create_nonce("shipkia_connection_nonce")); ?>'
-                        }, function (response) {
-                            if (response.success) {
-                                $('#shipkia-connection-message').html('<div class="notice notice-success inline"><p>' + response.data.message + '</p></div>');
-                                setTimeout(function () { location.reload(); }, 2000);
-                            } else {
-                                if (response.data && response.data.status === 'not_found') {
-                                    if (confirm(response.data.message || 'Store not found. Create new store?')) {
-                                        performSync(true); // Retry with create_new = true
-                                        return;
-                                    }
-                                }
-                                $('#shipkia-connection-message').html('<div class="notice notice-error inline"><p>' + (response.data.message || 'Sync failed') + '</p></div>');
-                                $btn.prop('disabled', false).text('Sync Now');
-                            }
-                        }).fail(function () {
-                            $('#shipkia-connection-message').html('<div class="notice notice-error inline"><p>Network error. Please try again.</p></div>');
-                            $btn.prop('disabled', false).text('Sync Now');
-                        });
-                    }
-
-                    performSync(false); // Initial attempt without force creating
-                });
-
-                $('#shipkia-sync-order-product-link').on('click', function (e) {
-                    var $link = $(this);
-                    // Mark as sync requested locally before redirecting
-                    $.post(ajaxurl, {
-                        action: 'shipkia_mark_sync_requested',
-                        nonce: '<?php echo esc_attr(wp_create_nonce("shipkia_connection_nonce")); ?>'
-                    });
-                    // Hide immediately in this tab
-                    $link.hide();
-                });
-
-                $('#shipkia-disconnect-btn').on('click', function () {
-                    if (!confirm('Are you sure you want to disconnect? This will stop all synchronization. You can reconnect later.')) return;
-                    var $btn = $(this);
-                    $btn.prop('disabled', true).text('Disconnecting...');
-                    $('#shipkia-connection-message').html('');
-
-                    $.post(ajaxurl, {
-                        action: 'shipkia_disconnect_platform',
-                        nonce: '<?php echo esc_attr(wp_create_nonce("shipkia_connection_nonce")); ?>'
-                    }, function (response) {
-                        if (response.success) {
-                            location.reload();
-                        } else {
-                            $('#shipkia-connection-message').html('<div class="notice notice-error inline"><p>' + (response.data.message || 'Disconnect failed') + '</p></div>');
-                            $btn.prop('disabled', false).text('Disconnect');
-                        }
-                    }).fail(function () {
-                        $('#shipkia-connection-message').html('<div class="notice notice-error inline"><p>Network error. Please try again.</p></div>');
-                        $btn.prop('disabled', false).text('Disconnect');
-                    });
-                });
-
-                $('#shipkia-reconnect-btn').on('click', function () {
-                    var $btn = $(this);
-                    $btn.prop('disabled', true).text('Reconnecting...');
-                    $('#shipkia-connection-message').html('');
-
-                    $.post(ajaxurl, {
-                        action: 'shipkia_reconnect_platform',
-                        nonce: '<?php echo esc_attr(wp_create_nonce("shipkia_connection_nonce")); ?>'
-                    }, function (response) {
-                        if (response.success) {
-                            $('#shipkia-connection-message').html('<div class="notice notice-success inline"><p>' + response.data.message + '</p></div>');
-                            setTimeout(function () { location.reload(); }, 1500);
-                        } else {
-                            $('#shipkia-connection-message').html('<div class="notice notice-error inline"><p>' + (response.data.message || 'Reconnection failed') + '</p></div>');
-                            $btn.prop('disabled', false).text('Reconnect');
-                        }
-                    }).fail(function () {
-                        $('#shipkia-connection-message').html('<div class="notice notice-error inline"><p>Network error. Please try again.</p></div>');
-                        $btn.prop('disabled', false).text('Reconnect');
-                    });
-                });
-
-                // $('#shipkia-remove-btn').on('click', function () {
-                //     if (!confirm('Are you sure you want to permanently remove this store? This action cannot be undone.')) return;
-                //     var $btn = $(this);
-                //     $btn.prop('disabled', true).text('Removing...');
-                //     $('#shipkia-connection-message').html('');
-
-                //     $.post(ajaxurl, {
-                //         action: 'shipkia_remove_platform',
-                //         nonce: '<?php echo esc_attr(wp_create_nonce("shipkia_connection_nonce")); ?>'
-                //     }, function (response) {
-                //         if (response.success) {
-                //             location.reload();
-                //         } else {
-                //             $('#shipkia-connection-message').html('<div class="notice notice-error inline"><p>' + (response.data.message || 'Removal failed') + '</p></div>');
-                //             $btn.prop('disabled', false).text('Remove Store');
-                //         }
-                //     }).fail(function () {
-                //         $('#shipkia-connection-message').html('<div class="notice notice-error inline"><p>Network error. Please try again.</p></div>');
-                //         $btn.prop('disabled', false).text('Remove Store');
-                //     });
-                // });
-            });
-        </script>
         <?php
     }
 
@@ -557,35 +385,6 @@ class Shipkia_Settings_Page
                     <?php esc_html_e('Connect to ShipKia', 'shipkia-connect'); ?>
                 </button>
 
-                <script>
-                    jQuery(document).ready(function ($) {
-                        $('#shipkia-connect-btn').on('click', function () {
-                            var appUrl = $('#shipkia_app_url').val();
-                            if (!appUrl) {
-                                alert('Please enter ShipKia URL');
-                                return;
-                            }
-
-                            var $btn = $(this);
-                            $btn.prop('disabled', true).text('Connecting...');
-                            $('#shipkia-connection-message').html('');
-
-                            $.post(ajaxurl, {
-                                action: 'shipkia_connect_platform',
-                                app_url: appUrl,
-                                nonce: '<?php echo esc_attr(wp_create_nonce("shipkia_connection_nonce")); ?>'
-                            }, function (response) {
-                                if (response.success) {
-                                    $('#shipkia-connection-message').html('<div class="notice notice-success inline"><p>' + response.data.message + '</p></div>');
-                                    setTimeout(function () { location.reload(); }, 1500);
-                                } else {
-                                    $('#shipkia-connection-message').html('<div class="notice notice-error inline"><p>' + (response.data.message || 'Connection failed') + '</p></div>');
-                                    $btn.prop('disabled', false).text('<?php esc_attr_e('Connect to ShipKia', 'shipkia-connect'); ?>');
-                                }
-                            });
-                        });
-                    });
-                </script>
             <?php else: ?>
                 <p class="description">
                     <?php esc_html_e('Disconnect above to change the ShipKia URL', 'shipkia-connect'); ?>
@@ -615,6 +414,16 @@ class Shipkia_Settings_Page
         add_action('update_option_shipkia_tracking_enabled', array(__CLASS__, 'on_settings_update'));
         add_action('update_option_shipkia_tracking_button_text', array(__CLASS__, 'on_settings_update'));
         add_action('update_option_shipkia_tracking_new_tab', array(__CLASS__, 'on_settings_update'));
+
+        add_filter('option_page_capability_shipkia_settings_group', array(__CLASS__, 'get_settings_capability'));
+    }
+
+    /**
+     * Capability required to save ShipKia settings.
+     */
+    public static function get_settings_capability()
+    {
+        return 'manage_woocommerce';
     }
 
     /**
@@ -624,8 +433,9 @@ class Shipkia_Settings_Page
     {
         check_ajax_referer('shipkia_connection_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!self::current_user_can_manage_plugin()) {
             wp_send_json_error(array('message' => __('Unauthorized', 'shipkia-connect')));
+            return;
         }
 
         $result = Shipkia_Auth::reconnect();
@@ -644,13 +454,13 @@ class Shipkia_Settings_Page
     {
         check_ajax_referer('shipkia_connection_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
+        if (!self::current_user_can_manage_plugin()) {
             wp_send_json_error(array('message' => __('Unauthorized', 'shipkia-connect')));
             return;
         }
 
         // Determine return URL (current settings page)
-        $return_url = admin_url('admin.php?page=shipkia-settings');
+        $return_url = admin_url('admin.php?page=shipkia-connect');
 
         $backend_api_url = Shipkia_Auth::get_platform_auth_url($return_url);
 
@@ -665,6 +475,12 @@ class Shipkia_Settings_Page
         if (is_wp_error($response)) {
             // translators: %s is the error message from the backend communication.
             wp_send_json_error(array('message' => sprintf(__('Backend communication failed: %s', 'shipkia-connect'), $response->get_error_message())));
+            return;
+        }
+
+        $status_code = wp_remote_retrieve_response_code($response);
+        if ($status_code < 200 || $status_code >= 300) {
+            wp_send_json_error(array('message' => sprintf(__('Backend returned HTTP %d while generating the authorization URL.', 'shipkia-connect'), intval($status_code))));
             return;
         }
 
@@ -686,8 +502,9 @@ class Shipkia_Settings_Page
     {
         check_ajax_referer('shipkia_connection_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!self::current_user_can_manage_plugin()) {
             wp_send_json_error(array('message' => __('Unauthorized', 'shipkia-connect')));
+            return;
         }
 
         $app_url = filter_input(INPUT_POST, 'app_url', FILTER_SANITIZE_URL);
@@ -713,8 +530,9 @@ class Shipkia_Settings_Page
     {
         check_ajax_referer('shipkia_connection_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!self::current_user_can_manage_plugin()) {
             wp_send_json_error(array('message' => __('Unauthorized', 'shipkia-connect')));
+            return;
         }
 
         $result = Shipkia_Auth::disconnect();
@@ -733,8 +551,9 @@ class Shipkia_Settings_Page
     {
         check_ajax_referer('shipkia_connection_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!self::current_user_can_manage_plugin()) {
             wp_send_json_error(array('message' => __('Unauthorized', 'shipkia-connect')));
+            return;
         }
 
         $result = Shipkia_Auth::remove_store();
@@ -753,8 +572,9 @@ class Shipkia_Settings_Page
     {
         check_ajax_referer('shipkia_connection_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!self::current_user_can_manage_plugin()) {
             wp_send_json_error(array('message' => __('Unauthorized', 'shipkia-connect')));
+            return;
         }
 
         $create_new = filter_input(INPUT_POST, 'create_new', FILTER_VALIDATE_BOOLEAN);
@@ -783,7 +603,7 @@ class Shipkia_Settings_Page
     {
         check_ajax_referer('shipkia_connection_nonce', 'nonce');
 
-        if (!current_user_can('manage_options')) {
+        if (!self::current_user_can_manage_plugin()) {
             wp_send_json_error(array('message' => __('Unauthorized', 'shipkia-connect')));
             return;
         }

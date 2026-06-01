@@ -140,7 +140,7 @@ class Shipkia_Tracking_Meta
         echo '<p class="form-field shipkia-col">';
         echo '<label for="shipkia_tracking_url_display">' . esc_html__('Tracking URL', 'shipkia-connect') . '</label>';
         if (!empty($tracking_url)) {
-            echo '<a href="' . esc_url($tracking_url) . '" target="_blank" class="button button-primary">' . esc_html__('Open Tracking Page', 'shipkia-connect') . ' ↗</a>';
+            echo '<a href="' . esc_url($tracking_url) . '" target="_blank" rel="noopener noreferrer" class="button button-primary">' . esc_html__('Open Tracking Page', 'shipkia-connect') . ' ↗</a>';
         } else {
             echo '<span class="description">' . esc_html__('No tracking URL available', 'shipkia-connect') . '</span>';
         }
@@ -219,7 +219,7 @@ class Shipkia_Tracking_Meta
         }
 
         if (!empty($url)) {
-            echo '<br><a href="' . esc_url($url) . '" target="_blank" class="button button-small shipkia-track-btn">' . esc_html__('Track', 'shipkia-connect') . '</a>';
+            echo '<br><a href="' . esc_url($url) . '" target="_blank" rel="noopener noreferrer" class="button button-small shipkia-track-btn">' . esc_html__('Track', 'shipkia-connect') . '</a>';
         }
     }
 }

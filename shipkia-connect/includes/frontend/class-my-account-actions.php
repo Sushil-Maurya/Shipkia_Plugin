@@ -54,7 +54,7 @@ class Shipkia_My_Account_Actions
                 echo '<p><strong>' . esc_html__('AWB Number', 'shipkia-connect') . ':</strong> ' . esc_html($awb) . '</p>';
             }
 
-            echo '<a href="' . esc_url($url) . '" target="' . esc_attr($target) . '" class="button">' . esc_html__('Track Shipment', 'shipkia-connect') . '</a>';
+            echo '<a href="' . esc_url($url) . '" target="' . esc_attr($target) . '" rel="noopener noreferrer" class="button">' . esc_html__('Track Shipment', 'shipkia-connect') . '</a>';
             echo '</div>';
         }
     }

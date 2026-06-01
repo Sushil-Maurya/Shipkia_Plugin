@@ -1,5 +1,5 @@
 === ShipKia Connect ===
-Contributors: ShipKia
+Contributors: buopsosales
 Donate link: https://shipkia.com/
 Tags: woocommerce shipping, shipment tracking, logistics integration, shipping india, shipkia
 Requires at least: 5.0
@@ -57,6 +57,19 @@ Choose from multiple reliable courier partners with intelligent recommendations 
 3. Open **Webhooks** to verify that topics (Order/Product Created/Updated) are active and pointing to the ShipKia endpoint.
 
 Once connected, ShipKia handles the heavy lifting, syncing orders automatically so you can focus on growing your business.
+
+== External Services ==
+
+This plugin connects to the ShipKia Platform and BU eCommerce Integrations API. These external services are required to connect a WooCommerce store to ShipKia, create or verify the store registration, create WooCommerce webhooks, synchronize plugin settings, update connection status, and disconnect or remove the store connection when requested by an administrator.
+
+The plugin sends data to these services when an administrator initializes or reconnects the store connection, clicks "Sync Now", changes plugin settings, disconnects/removes the store, or completes WooCommerce authorization. WooCommerce also sends webhook payloads to the ShipKia Platform when configured order or product events occur.
+
+Data sent may include the store domain and URL, store identifier, platform name, WooCommerce REST API consumer key and secret, plugin-generated authentication secret/signature, access and refresh tokens used by the integration, plugin settings such as tracking button options, connection status, webhook status, timestamps, and diagnostic connection logs used to troubleshoot setup. WooCommerce webhook payloads may include order and product data needed for shipping, fulfillment, tracking, and synchronization.
+
+These services are provided by ShipKia / BUOPSO. Please review the service terms and privacy policy before connecting your store:
+
+* Terms of Service: https://shipkia.com/terms
+* Privacy Policy: https://shipkia.com/privacy
 
 == Installation ==
 

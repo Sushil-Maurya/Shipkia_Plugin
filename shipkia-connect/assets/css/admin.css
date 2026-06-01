@@ -71,6 +71,20 @@
     background: #0a4b78 !important;
 }
 
+.shipkia-spin {
+    animation: shipkia-rotation 2s infinite linear;
+}
+
+@keyframes shipkia-rotation {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(359deg);
+    }
+}
+
 /* Ensure inputs take full width of their column and look read-only */
 .shipkia-admin-row input[type="text"] {
     width: 100% !important;
