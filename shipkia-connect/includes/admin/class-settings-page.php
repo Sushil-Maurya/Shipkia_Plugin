@@ -150,8 +150,7 @@ class Shipkia_Settings_Page
     {
         $val = function_exists('get_option') ? get_option('shipkia_tracking_button_text', 'Track') : 'Track';
         ?>
-        <input type="text" name="shipkia_tracking_button_text"
-            value="<?php echo esc_attr($val); ?>" class="regular-text" />
+        <input type="text" name="shipkia_tracking_button_text" value="<?php echo esc_attr($val); ?>" class="regular-text" />
         <?php
     }
 
@@ -182,8 +181,7 @@ class Shipkia_Settings_Page
                 $checked = in_array($site->blog_id, $selected_sites) ? 'checked' : '';
                 ?>
                 <label style="display: block; margin-bottom: 5px;">
-                    <input type="checkbox" name="shipkia_multisite_sites[]"
-                        value="<?php echo esc_attr($site->blog_id); ?>" <?php checked($checked, 'checked'); ?> />
+                    <input type="checkbox" name="shipkia_multisite_sites[]" value="<?php echo esc_attr($site->blog_id); ?>" <?php checked($checked, 'checked'); ?> />
                     <?php
                     if ($site_details) {
                         echo esc_html($site_details->blogname) . ' (' . esc_html($site_details->domain . $site_details->path) . ')';
@@ -265,10 +263,9 @@ class Shipkia_Settings_Page
                             <tr>
                                 <td style="padding: 5px 0;"><strong>ShipKia URL:</strong></td>
                                 <td style="padding: 5px 0;">
-                                    <a href="<?php echo esc_url($status['shipkia_url']); ?>"
-                                        target="_blank" rel="noopener noreferrer" style="text-decoration: none;">
-                                        <code
-                                            style="color: #0073aa;"><?php echo esc_html($status['shipkia_url']); ?></code>
+                                    <a href="<?php echo esc_url($status['shipkia_url']); ?>" target="_blank" rel="noopener noreferrer"
+                                        style="text-decoration: none;">
+                                        <code style="color: #0073aa;"><?php echo esc_html($status['shipkia_url']); ?></code>
                                         <span class="dashicons dashicons-external"
                                             style="font-size: 12px; vertical-align: middle;"></span>
                                     </a>
@@ -317,19 +314,17 @@ class Shipkia_Settings_Page
 
                     <p style="margin: 15px 0 0 0; display: flex; gap: 10px;">
                         <?php if ($status['is_active']): ?>
-                            <button type="button" id="shipkia-sync-btn" class="button button-primary">
-                                <span class="dashicons dashicons-update"
-                                    style="font-size: 16px; vertical-align: middle; line-height: 28px;"></span>
+                            <button type="button" id="shipkia-sync-btn" class="button button-primary shipkia-icon-button">
+                                <span class="dashicons dashicons-update shipkia-button-icon" aria-hidden="true"></span>
                                 Sync Now
                             </button>
                             <?php if ($status['created_from'] === 'Plugin' && !$status['initial_sync_done']):
                                 $app_url = function_exists('get_option') ? get_option('shipkia_app_url', 'https://app.shipkia.com') : 'https://app.shipkia.com';
                                 $sync_url = rtrim($app_url, '/') . '/integrations?sync_shop=' . urlencode($status['store_id']) . '&platform=woocommerce';
                                 ?>
-                                <a href="<?php echo esc_url($sync_url); ?>"
-                                    id="shipkia-sync-order-product-link" target="_blank" rel="noopener noreferrer" class="button button-secondary">
-                                    <span class="dashicons dashicons-cloud-upload"
-                                        style="font-size: 16px; vertical-align: middle; line-height: 28px;"></span>
+                                <a href="<?php echo esc_url($sync_url); ?>" id="shipkia-sync-order-product-link" target="_blank"
+                                    rel="noopener noreferrer" class="button button-secondary shipkia-icon-button">
+                                    <span class="dashicons dashicons-controls-play shipkia-button-icon" aria-hidden="true"></span>
                                     Sync to ShipKia
                                 </a>
                             <?php endif; ?>
@@ -337,9 +332,8 @@ class Shipkia_Settings_Page
                                 Disconnect
                             </button>
                         <?php else: ?>
-                            <button type="button" id="shipkia-reconnect-btn" class="button button-primary">
-                                <span class="dashicons dashicons-update"
-                                    style="font-size: 16px; vertical-align: middle; line-height: 28px;"></span>
+                            <button type="button" id="shipkia-reconnect-btn" class="button button-primary shipkia-icon-button">
+                                <span class="dashicons dashicons-update shipkia-button-icon" aria-hidden="true"></span>
                                 Reconnect
                             </button>
                             <!-- <button type="button" id="shipkia-remove-btn" class="button button-link-delete" style="color: #dc3232;">
@@ -374,8 +368,9 @@ class Shipkia_Settings_Page
 
         ?>
         <div class="shipkia-app-url-container">
-            <input type="text" id="shipkia_app_url" name="shipkia_app_url"
-                value="<?php echo esc_attr($val); ?>" class="regular-text" <?php echo $is_connected ? 'disabled readonly' : ''; ?> placeholder="https://app.shipkia.com" />
+            <input type="text" id="shipkia_app_url" name="shipkia_app_url" value="<?php echo esc_attr($val); ?>"
+                class="regular-text" <?php echo $is_connected ? 'disabled readonly' : ''; ?>
+                placeholder="https://app.shipkia.com" />
 
             <?php if (!$is_connected): ?>
                 <p class="description">
@@ -400,7 +395,7 @@ class Shipkia_Settings_Page
     public static function init()
     {
         add_action('admin_init', array(__CLASS__, 'init_settings'));
-        
+
         // AJAX Handlers
         add_action('wp_ajax_shipkia_connect_platform', array(__CLASS__, 'handle_connect_ajax'));
         add_action('wp_ajax_shipkia_disconnect_platform', array(__CLASS__, 'handle_disconnect_ajax'));
@@ -453,7 +448,7 @@ class Shipkia_Settings_Page
     public static function handle_get_auth_url_ajax()
     {
         check_ajax_referer('shipkia_connection_nonce', 'nonce');
-        
+
         if (!self::current_user_can_manage_plugin()) {
             wp_send_json_error(array('message' => __('Unauthorized', 'shipkia-connect')));
             return;

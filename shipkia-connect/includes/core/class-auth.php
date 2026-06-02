@@ -130,10 +130,14 @@ class Shipkia_Auth
                 delete_transient('shipkia_plugin_just_activated');
             }
 
-            // Set another transient to show a notice on the settings page
-            if (function_exists('set_transient')) {
+            $already_connected = self::is_connected();
+            if ($already_connected && function_exists('update_option')) {
+                update_option('shipkia_initial_sync_done', true);
+            }
+
+            // Show first-time setup prompts only for stores that are not already connected.
+            if (!$already_connected && function_exists('set_transient')) {
                 set_transient('shipkia_show_activation_notice', true, 60);
-                // Force auto-connect to run on the settings page (bypasses throttle)
                 set_transient('shipkia_trigger_auto_connect', true, 60);
             }
 
@@ -614,8 +618,12 @@ class Shipkia_Auth
     private static function store_connection_data($store_id, $platform_url = null, $domain = null, $api_connected = false, $webhooks_active = false, $is_active = true, $created_from = null, $api_key = null, $api_secret = null, $initial_sync_done = false)
     {
         if (function_exists('update_option')) {
+            $existing_store_id = get_option('shipkia_store_id');
+            $was_connected = (bool) get_option('shipkia_connected', false);
             update_option('shipkia_connected', true);
-            update_option('shipkia_initial_sync_done', $initial_sync_done);
+            $is_existing_store = $was_connected && !empty($existing_store_id) && (string) $existing_store_id === (string) $store_id;
+            $sync_requested = (bool)$initial_sync_done || (bool)get_option('shipkia_initial_sync_done', false) || $is_existing_store;
+            update_option('shipkia_initial_sync_done', $sync_requested);
 
             // Clear activation notices and triggers since we are now connected
             if (function_exists('delete_transient')) {

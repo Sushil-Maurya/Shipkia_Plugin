@@ -42,7 +42,7 @@ class Shipkia_Tracking_Meta
 
         add_meta_box(
             'shipkia_tracking_meta_box',
-            function_exists('__') ? __('ShipKia Connect', 'shipkia-connect') : 'ShipKia Connect',
+            function_exists('__') ? __('Tracking Details - ShipKia Connect', 'shipkia-connect') : 'Tracking Details - ShipKia Connect',
             array($this, 'render_tracking_meta_box'),
             'shop_order', // For legacy CPT
             'normal',
@@ -55,7 +55,7 @@ class Shipkia_Tracking_Meta
             if (function_exists('add_meta_box')) {
                 add_meta_box(
                     'shipkia_tracking_meta_box',
-                    function_exists('__') ? __('ShipKia Connect', 'shipkia-connect') : 'ShipKia Connect',
+                    function_exists('__') ? __('Tracking Details - ShipKia Connect', 'shipkia-connect') : 'Tracking Details - ShipKia Connect',
                     array($this, 'render_tracking_meta_box'),
                     $screen,
                     'normal',

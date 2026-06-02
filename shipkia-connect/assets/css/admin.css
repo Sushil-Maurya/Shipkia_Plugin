@@ -72,16 +72,38 @@
 }
 
 .shipkia-spin {
-    animation: shipkia-rotation 2s infinite linear;
+    animation: shipkia-rotation 1s linear infinite;
+}
+
+.button.shipkia-icon-button {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    line-height: 1 !important;
+    min-height: 30px;
+    vertical-align: middle;
+}
+
+.shipkia-button-icon {
+    display: inline-block;
+    flex: 0 0 16px;
+    width: 16px !important;
+    height: 16px !important;
+    font-size: 16px !important;
+    line-height: 16px !important;
+    text-align: center;
+    vertical-align: middle;
+    transform-origin: 50% 50%;
 }
 
 @keyframes shipkia-rotation {
     from {
-        transform: rotate(0deg);
+        transform: rotate(0turn);
     }
 
     to {
-        transform: rotate(359deg);
+        transform: rotate(1turn);
     }
 }
 

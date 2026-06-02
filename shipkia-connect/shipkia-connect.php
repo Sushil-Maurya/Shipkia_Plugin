@@ -189,6 +189,13 @@ if (function_exists('register_activation_hook')) {
 
 function shipkia_tracking_plugin_activated()
 {
+    if (function_exists('get_option') && function_exists('update_option')) {
+        $already_connected = get_option('shipkia_connected') && get_option('shipkia_store_id');
+        if ($already_connected) {
+            update_option('shipkia_initial_sync_done', true);
+        }
+    }
+
     // Mark that we just activated to trigger redirect and confirmation UI
     if (function_exists('set_transient')) {
         set_transient('shipkia_plugin_just_activated', true, 60);
