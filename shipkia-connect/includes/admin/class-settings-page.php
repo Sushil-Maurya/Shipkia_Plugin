@@ -475,6 +475,7 @@ class Shipkia_Settings_Page
 
         $status_code = wp_remote_retrieve_response_code($response);
         if ($status_code < 200 || $status_code >= 300) {
+            // translators: %d is the HTTP status code returned by the backend.
             wp_send_json_error(array('message' => sprintf(__('Backend returned HTTP %d while generating the authorization URL.', 'shipkia-connect'), intval($status_code))));
             return;
         }

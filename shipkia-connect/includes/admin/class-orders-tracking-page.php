@@ -22,11 +22,6 @@ class Shipkia_Orders_Tracking_Page
             return;
         }
 
-        // Check nonce for pagination (auditor recommendation)
-        if (isset($_GET['paged'])) {
-            // Usually pagination doesn't have nonces, but we can check a generic one if needed
-            // or just ensure it's an integer.
-        }
         $paged = filter_input(INPUT_GET, 'paged', FILTER_SANITIZE_NUMBER_INT);
         $paged = $paged ? max(1, intval($paged)) : 1;
         $args = array(
