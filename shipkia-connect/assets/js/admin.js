@@ -216,7 +216,7 @@ jQuery(document).ready(function ($) {
         var originalHtml = $btn.html();
 
         function performSync(createNew) {
-            $btn.prop('disabled', true).html('<span class="dashicons dashicons-update shipkia-spin" style="font-size:16px;vertical-align:middle;line-height:28px;"></span> Syncing...');
+            $btn.prop('disabled', true).html('<span class="dashicons dashicons-update shipkia-button-icon shipkia-spin" aria-hidden="true"></span> Syncing...');
 
             $.post(getAjaxUrl(), {
                 action: 'shipkia_sync_platform',
@@ -225,7 +225,7 @@ jQuery(document).ready(function ($) {
             }, function (response) {
                 if (response.success) {
                     showConnectionMessage(response.data.message || 'Sync successful', 'success');
-                    $btn.html('<span class="dashicons dashicons-yes" style="font-size:16px;vertical-align:middle;line-height:28px;"></span> Synced');
+                    $btn.html('<span class="dashicons dashicons-yes shipkia-button-icon" aria-hidden="true"></span> Synced');
                     setTimeout(function () { location.reload(); }, 1500);
                 } else {
                     if (!createNew && response.data && (response.data.store_not_found || response.data.status === 'not_found')) {
@@ -287,7 +287,7 @@ jQuery(document).ready(function ($) {
         e.preventDefault();
 
         var $btn = $(this);
-        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update shipkia-spin" style="font-size:16px;vertical-align:middle;line-height:28px;"></span> Reconnecting...');
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update shipkia-button-icon shipkia-spin" aria-hidden="true"></span> Reconnecting...');
 
         $.post(getAjaxUrl(), {
             action: 'shipkia_reconnect_platform',
@@ -298,11 +298,11 @@ jQuery(document).ready(function ($) {
                 setTimeout(function () { location.reload(); }, 1500);
             } else {
                 showConnectionMessage(response.data && response.data.message ? response.data.message : 'Reconnection failed', 'error');
-                $btn.prop('disabled', false).html('<span class="dashicons dashicons-update" style="font-size:16px;vertical-align:middle;line-height:28px;"></span> Reconnect');
+                $btn.prop('disabled', false).html('<span class="dashicons dashicons-update shipkia-button-icon" aria-hidden="true"></span> Reconnect');
             }
         }).fail(function (xhr) {
             showConnectionMessage(getAjaxErrorMessage(xhr, 'Network error. Please try again.'), 'error');
-            $btn.prop('disabled', false).html('<span class="dashicons dashicons-update" style="font-size:16px;vertical-align:middle;line-height:28px;"></span> Reconnect');
+            $btn.prop('disabled', false).html('<span class="dashicons dashicons-update shipkia-button-icon" aria-hidden="true"></span> Reconnect');
         });
     });
 
